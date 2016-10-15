@@ -2,10 +2,11 @@
 
 import salt.client
 import salt.utils
+import salt.grains
 import salt.utils.parsers
 import salt.ext.six as six
 import yaml
-
+import os
 
 def list_callback(option, opt, value, parser): # pylint: disable=unused-argument
     if ',' in value:
@@ -18,7 +19,8 @@ class SaltNodesCommand(
         six.with_metaclass(
             salt.utils.parsers.OptionParserMeta,
             salt.utils.parsers.OptionParser,
-            salt.utils.parsers.ExtendedTargetOptionsMixIn)):
+            salt.utils.parsers.ExtendedTargetOptionsMixIn,
+            salt.utils.parsers.ConfigDirMixIn)):
     usage = '%prog [options] \'<target>\''
     description = 'Salt Mine node source for Rundeck.'
     epilog = None
@@ -28,6 +30,7 @@ class SaltNodesCommand(
     ignore_grains = ['hostname', 'osName', 'osVersion', 'osFamily', 'osArch']
 
     def get_nodes(self):
+        resources = {}
         options = self.parse_args()[0]
 
         # Map grain values into expected strings
@@ -38,10 +41,29 @@ class SaltNodesCommand(
         mine = salt.client.Caller().cmd(
             'mine.get', self.config['tgt'],
             self.options.mine_function,
-            expr_form=self.config['selected_target_option'])
+            expr_form=self.config['selected_target_option'],
+            exclude_minion=self.options.include_server_node)
+
+        # Special handling for server node
+        if self.options.include_server_node:
+            local_grains = salt.loader.grains(salt.config.minion_config(
+                '{0}/minion'.format(options.config_dir)))
+            resources['localhost'] = {
+                'hostname':    'localhost',
+                'description': 'Rundeck server node',
+                'username':    os.getlogin(),
+                'osName':      local_grains['kernel'],
+                'osVersion':   local_grains['kernelrelease'],
+                'osFamily':    os_family_map[local_grains['kernel']],
+                'osArch':      os_arch_map[local_grains['osarch']]
+            }
+            # Create optional tags from grains
+            map(lambda x: resources['localhost'].update(
+                {x.replace(':', '_'): salt.utils.traverse_dict_and_list(
+                    local_grains, x, default='', delimiter=options.delimiter)
+                }), self.config['grains'])
 
         # Map grains into a Rundeck resource dict
-        resources = {}
         for minion, minion_grains in mine.iteritems():
             # Map required node attributes from grains
             resources[minion] = {
@@ -68,6 +90,13 @@ class SaltNodesCommand(
                   'to retrive grains. Default value is grains.items '
                   'but this could be different if mine function '
                   'aliases are used.')
+        )
+        self.add_option(
+            '--include-server-node',
+            action="store_true",
+            help=('Include the Rundeck server node in the output. '
+                  'The server node is required for some workflows '
+                  'and must be provided by exactly one resource provider.')
         )
         self.add_option(
             '--grains',
