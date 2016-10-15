@@ -7,18 +7,18 @@ import salt.ext.six as six
 import yaml
 
 
-def list_callback(option, opt, value, parser):
+def list_callback(option, opt, value, parser): # pylint: disable=unused-argument
     if ',' in value:
         setattr(parser.values, option.dest, value.replace(' ', '').split(','))
     else:
         setattr(parser.values, option.dest, value.split())
 
 
-class SaltNodesCommand(six.with_metaclass(
-                       salt.utils.parsers.OptionParserMeta,
-                       salt.utils.parsers.OptionParser,
-                       salt.utils.parsers.ExtendedTargetOptionsMixIn)
-                       ):
+class SaltNodesCommand(
+        six.with_metaclass(
+            salt.utils.parsers.OptionParserMeta,
+            salt.utils.parsers.OptionParser,
+            salt.utils.parsers.ExtendedTargetOptionsMixIn)):
     usage = '%prog [options] \'<target>\''
     description = 'Salt Mine node source for Rundeck.'
     epilog = None
@@ -27,12 +27,12 @@ class SaltNodesCommand(six.with_metaclass(
                       'saltversion', 'virtual', 'manufacturer']
     ignore_grains = ['hostname', 'osName', 'osVersion', 'osFamily', 'osArch']
 
-    def run(self):
-        options, args = self.parse_args()
+    def get_nodes(self):
+        options = self.parse_args()[0]
 
         # Map grain values into expected strings
-        osFamily = {'Linux': 'unix', 'Windows': 'windows'}
-        osArch = {'x86_64': 'amd64', 'x86': 'x86'}
+        os_family_map = {'Linux': 'unix', 'Windows': 'windows'}
+        os_arch_map = {'x86_64': 'amd64', 'x86': 'x86'}
 
         # Call Salt Mine to retrive grains for all nodes
         mine = salt.client.Caller().cmd(
@@ -48,8 +48,8 @@ class SaltNodesCommand(six.with_metaclass(
                 'hostname':   minion_grains['fqdn'],
                 'osName':     minion_grains['kernel'],
                 'osVersion':  minion_grains['kernelrelease'],
-                'osFamily':   osFamily[minion_grains['kernel']],
-                'osArch':     osArch[minion_grains['osarch']]
+                'osFamily':   os_family_map[minion_grains['kernel']],
+                'osArch':     os_arch_map[minion_grains['osarch']]
             }
             # Create optional tags from grains
             map(lambda x: resources[minion].update(
@@ -57,8 +57,7 @@ class SaltNodesCommand(six.with_metaclass(
                     minion_grains, x, default='', delimiter=options.delimiter)
                 }), self.config['grains'])
 
-        # Print dict as YAML on stdout
-        print(yaml.dump(resources, default_flow_style=False))
+        return resources
 
     def _mixin_setup(self):
         self.add_option(
@@ -104,9 +103,7 @@ class SaltNodesCommand(six.with_metaclass(
                   'when separated by a space or comma.')
         )
 
-
     def _mixin_after_parsed(self):
-
         # Extract targeting expression
         try:
             if self.options.list:
@@ -137,4 +134,9 @@ class SaltNodesCommand(six.with_metaclass(
         self.config['grains'] = [x for x in self.config[
             'grains'] if x not in self.ignore_grains]
 
-SaltNodesCommand().run()
+
+if __name__ == '__main__':
+    # Print dict as YAML on stdout
+    print(yaml.dump(SaltNodesCommand().get_nodes(), default_flow_style=False))
+
+
