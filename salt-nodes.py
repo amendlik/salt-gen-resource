@@ -108,25 +108,20 @@ class SaltNodesCommand(six.with_metaclass(
     def _mixin_after_parsed(self):
 
         # Extract targeting expression
-        if self.options.list:
-            try:
+        try:
+            if self.options.list:
                 if ',' in self.args[0]:
                     self.config['tgt'] = \
                         self.args[0].replace(' ', '').split(',')
                 else:
                     self.config['tgt'] = self.args[0].split()
-            except IndexError:
-                self.exit(
-                    42,
-                    '\nCannot execute command without defining a target.\n\n')
-        else:
-            try:
+            else:
                 self.config['tgt'] = self.args[0]
-            except IndexError:
-                self.exit(
-                    42,
-                    '\nCannot execute command without defining a target.\n\n')
+        except IndexError:
+            self.exit(42, ('\nCannot execute command without '
+                           'defining a target.\n\n'))
 
+        # Set default targeting option
         if self.config['selected_target_option'] is None:
             self.config['selected_target_option'] = 'glob'
 
