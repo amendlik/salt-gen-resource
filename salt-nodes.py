@@ -51,7 +51,7 @@ class SaltNodesCommand(
             resources['localhost'] = {
                 'hostname':    'localhost',
                 'description': 'Rundeck server node',
-                'username':    os.getlogin(),
+                'username':    'rundeck',
                 'osName':      local_grains['kernel'],
                 'osVersion':   local_grains['kernelrelease'],
                 'osFamily':    os_family_map[local_grains['kernel']],
@@ -61,6 +61,7 @@ class SaltNodesCommand(
             map(lambda x: resources['localhost'].update(
                 {x.replace(':', '_'): salt.utils.traverse_dict_and_list(
                     local_grains, x, default='', delimiter=options.delimiter)
+                    .encode('utf-8')
                 }), self.config['grains'])
 
         # Map grains into a Rundeck resource dict
@@ -77,6 +78,7 @@ class SaltNodesCommand(
             map(lambda x: resources[minion].update(
                 {x.replace(':', '_'): salt.utils.traverse_dict_and_list(
                     minion_grains, x, default='', delimiter=options.delimiter)
+                    .encode('utf-8')
                 }), self.config['grains'])
 
         return resources
