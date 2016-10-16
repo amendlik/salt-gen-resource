@@ -6,7 +6,6 @@ import salt.grains
 import salt.utils.parsers
 import salt.ext.six as six
 import yaml
-import os
 
 def list_callback(option, opt, value, parser): # pylint: disable=unused-argument
     if ',' in value:
@@ -31,6 +30,7 @@ class SaltNodesCommand(
 
     def get_nodes(self):
         resources = {}
+        caller = salt.client.Caller()
         options = self.parse_args()[0]
 
         # Map grain values into expected strings
@@ -38,7 +38,7 @@ class SaltNodesCommand(
         os_arch_map = {'x86_64': 'amd64', 'x86': 'x86'}
 
         # Call Salt Mine to retrive grains for all nodes
-        mine = salt.client.Caller().cmd(
+        mine = caller.cmd(
             'mine.get', self.config['tgt'],
             self.options.mine_function,
             expr_form=self.config['selected_target_option'],
@@ -46,8 +46,7 @@ class SaltNodesCommand(
 
         # Special handling for server node
         if self.options.include_server_node:
-            local_grains = salt.loader.grains(salt.config.minion_config(
-                '{0}/minion'.format(options.config_dir)))
+            local_grains = salt.loader.grains(caller.opts)
             resources['localhost'] = {
                 'hostname':    'localhost',
                 'description': 'Rundeck server node',
@@ -61,7 +60,6 @@ class SaltNodesCommand(
             map(lambda x: resources['localhost'].update(
                 {x.replace(':', '_'): salt.utils.traverse_dict_and_list(
                     local_grains, x, default='', delimiter=options.delimiter)
-                    .encode('utf-8')
                 }), self.config['grains'])
 
         # Map grains into a Rundeck resource dict
@@ -78,7 +76,6 @@ class SaltNodesCommand(
             map(lambda x: resources[minion].update(
                 {x.replace(':', '_'): salt.utils.traverse_dict_and_list(
                     minion_grains, x, default='', delimiter=options.delimiter)
-                    .encode('utf-8')
                 }), self.config['grains'])
 
         return resources
