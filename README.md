@@ -10,14 +10,14 @@ You must have a Salt Minion running on the Rundeck server.
 
 ### Resource Model Provider Script
 
-The only file required from this repository is [salt-nodes.py](salt-nodes.py). Copy it to your Rundeck server, in the location where your keep your Rundeck configuration scripts (e.g. `/opt/rundeck/scripts`). You can also clone this entire repository to your scripts location to make future updates easy.
+The only file required from this repository is [salt-gen-resource.py](salt-gen-resource.py). Copy it to your Rundeck server, in the location where your keep your Rundeck configuration scripts (e.g. `/opt/rundeck/scripts`). You can also clone this entire repository to your scripts location to make future updates easy.
 
 ### Sudo policy
 
 Because the script is essentially running the Salt Minion, it must be run as root. Add this to your sudoers policy to permit Rundeck to run it:
 ```
-rundeck ALL=(root) NOPASSWD: /opt/rundeck/scripts/salt-nodes.py
-Defaults!/opt/rundeck/scripts/salt-nodes.py !requiretty
+rundeck ALL=(root) NOPASSWD: /opt/rundeck/scripts/salt-gen-resource.py
+Defaults!/opt/rundeck/scripts/salt-gen-resource.py !requiretty
 ```
 
 ### Project configuration
@@ -28,15 +28,15 @@ The project configuration can be edited through the web UI, or by editing the fi
 2. The UI knows the location of the file. Rundeck can be installed in a variety of configurations, and all of them place configuration files in different places.
 3. The UI handles string escaping. If you insist on editing the file directly, you must follow the escaping rules of Java .props files.
 
-Edit your Rundeck project configuration to include a new node source script. Change the `file` parameter to match the location where you installed `salt-nodes.py`.
+Edit your Rundeck project configuration to include a new node source script. Change the `file` parameter to match the location where you installed `salt-gen-resource.py`.
 ```
 resources.source.2.config.args=-G virtual:kvm
-resources.source.2.config.file=/opt/rundeck/scripts/salt-nodes.py
+resources.source.2.config.file=/opt/rundeck/scripts/salt-gen-resource.py
 resources.source.2.config.format=resourceyaml
 resources.source.2.config.interpreter=sudo
 resources.source.2.type=script
 ```
-**Note:** Do not delete the existing node source in your configuration file. That file usually contains the 'server node', which is necessary for certiain Rundeck workflows. The server node is **not** implemented by `salt-nodes.py`. Instead, configure this script as an additional node source.
+**Note:** Do not delete the existing node source in your configuration file. That file usually contains the 'server node', which is necessary for certiain Rundeck workflows. The server node is **not** implemented by `salt-gen-resource.py`. Instead, configure this script as an additional node source.
 
 ### Salt Mine
 This resource model provider depends on the Salt Mine having access to the `grains.items` function on all minions. To enable this, the `mine_functions` options need to be applied to all Minions, either through the Minion configuration files, or using Pillar. The simplist `mine_functions` that would work is this:
@@ -56,9 +56,9 @@ See the [online documentation](https://docs.saltstack.com/en/latest/topics/mine/
 
 ## Configuration
 
-Running `salt-nodes.py --help` will tell you just about everything you need to know:
+Running `salt-gen-resource.py --help` will tell you just about everything you need to know:
 ```
-Usage: salt-nodes.py [options] '<target>'
+Usage: salt-gen-resource.py [options] '<target>'
 
 Salt Mine node source for Rundeck.
 
