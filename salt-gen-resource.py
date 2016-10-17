@@ -108,7 +108,7 @@ class SaltNodesCommand(
         value = salt.utils.traverse_dict_and_list(
             grains, item, default='',
             delimiter=self.options.delimiter)
-        if isinstance(value, str):
+        if isinstance(value, unicode):
             value = value.encode('utf-8')
         elif hasattr(value, '__iter__'):
             raise TypeError
