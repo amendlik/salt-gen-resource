@@ -35,8 +35,6 @@ class SaltNodesCommand(
         syspaths.LOGS_DIR, 'salt-gen-resources.log')
     _setup_mp_logging_listener_ = False
 
-    config = {}
-
     # Define lists of defaullt grains to add and ignore
     default_grains = ['os', 'os_family', 'osrelease', 'osmajorrelease',
                       'saltversion', 'virtual', 'manufacturer']
@@ -49,7 +47,9 @@ class SaltNodesCommand(
     def get_nodes(self):
         resources = {}
         self.parse_args()
-        caller = salt.client.Caller()
+
+        caller = salt.client.Caller(
+            os.path.join(self.options.config_dir, self._config_filename_))
 
         # Call Salt Mine to retrive grains for all nodes
         mine = caller.cmd(

@@ -66,6 +66,9 @@ Options:
   --version             show program's version number and exit
   --versions-report     Show program's dependencies version number and exit.
   -h, --help            show this help message and exit
+  -c CONFIG_DIR, --config-dir=CONFIG_DIR
+                        Pass in an alternative configuration directory.
+                        Default: '/etc/salt'.
   --mine-function=MINE_FUNCTION
                         Set the function name for Salt Mine to execute to
                         retrive grains. Default value is grains.items but this
@@ -87,6 +90,22 @@ Options:
                         Remove grains from the default list of grains mapped
                         to Rundeck node attributes. Multiple grains may be
                         specified when separated by a space or comma.
+
+  Logging Options:
+    Logging options which override any settings defined on the
+    configuration files.
+
+    -l LOG_LEVEL, --log-level=LOG_LEVEL
+                        Console logging log level. One of 'all', 'garbage',
+                        'trace', 'debug', 'profile', 'info', 'warning',
+                        'error', 'critical', 'quiet'. Default: 'warning'.
+    --log-file=LOG_FILE
+                        Log file path. Default: '/var/log/salt/salt-gen-
+                        resources.log'.
+    --log-file-level=LOG_LEVEL_LOGFILE
+                        Logfile logging log level. One of 'all', 'garbage',
+                        'trace', 'debug', 'profile', 'info', 'warning',
+                        'error', 'critical', 'quiet'. Default: 'warning'.
 
   Target Options:
     Target selection options.
