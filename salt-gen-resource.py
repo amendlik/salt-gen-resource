@@ -65,7 +65,7 @@ class SaltNodesCommand(
             resources[self._server_node_name] = {
                 'hostname':    self._server_node_name,
                 'description': 'Rundeck server node',
-                'username':    'rundeck',
+                'username':    self.options.server_node_user,
                 'osName':      local_grains['kernel'],
                 'osVersion':   local_grains['kernelrelease'],
                 'osFamily':    self.os_family_map[local_grains['kernel']],
@@ -130,6 +130,14 @@ class SaltNodesCommand(
             help=('Include the Rundeck server node in the output. '
                   'The server node is required for some workflows '
                   'and must be provided by exactly one resource provider.')
+        )
+        self.add_option(
+            '-u', '--server-node-user',
+            type=str,
+            default='rundeck',
+            help=('Specify the user name to use when running jobs on the '
+                  'server node. This would typically be the same user that '
+                  'the Rundeck service is running as. Default: \'rundeck\'.')
         )
         self.add_option(
             '--grains',

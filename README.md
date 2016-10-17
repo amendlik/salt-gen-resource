@@ -78,6 +78,11 @@ Options:
                         Include the Rundeck server node in the output. The
                         server node is required for some workflows and must be
                         provided by exactly one resource provider.
+  -u SERVER_NODE_USER, --server-node-user=SERVER_NODE_USER
+                        Specify the user name to use when running jobs on the
+                        server node. This would typically be the same user
+                        that the Rundeck service is running as. Default:
+                        'rundeck'.
   --grains=GRAINS       Override the default list of grains mapped to Rundeck
                         node attributes. The default list is: os, os_family,
                         osrelease, osmajorrelease, saltversion, virtual,
