@@ -137,7 +137,7 @@ class SaltNodesCommand(
             action='callback',
             callback=list_callback,
             help=('Override the default list of grains mapped to '
-                  'Rundeck node tags. The default list is: {0}.'
+                  'Rundeck node attributes. The default list is: {0}.'
                   .format(', '.join(self.default_grains)))
         )
         self.add_option(
@@ -146,7 +146,7 @@ class SaltNodesCommand(
             action='callback',
             callback=list_callback,
             help=('Add grains to the default list of grains mapped to '
-                  'Rundeck node tags. Multiple grains may be specified '
+                  'Rundeck node attributes. Multiple grains may be specified '
                   'when separated by a space or comma. '
                   'Grains that are nested in a dictionary can be matched '
                   'by adding a colon for each level that is traversed. '
@@ -160,7 +160,7 @@ class SaltNodesCommand(
             action='callback',
             callback=list_callback,
             help=('Remove grains from the default list of grains mapped to '
-                  'Rundeck node tags. Multiple grains may be specified '
+                  'Rundeck node attributes. Multiple grains may be specified '
                   'when separated by a space or comma.')
         )
 

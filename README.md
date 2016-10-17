@@ -71,22 +71,22 @@ Options:
                         retrive grains. Default value is grains.items but this
                         could be different if mine function aliases are used.
   --grains=GRAINS       Override the default list of grains mapped to Rundeck
-                        node tags. The default list is: os, os_family,
+                        node attributes. The default list is: os, os_family,
                         osrelease, osmajorrelease, saltversion, virtual,
                         manufacturer.
   --add-grains=ADD_GRAINS
                         Add grains to the default list of grains mapped to
-                        Rundeck node tags. Multiple grains may be specified
-                        when separated by a space or comma. Grains that are
-                        nested in a dictionary can be matched by adding a
-                        colon for each level that is traversed. The following
-                        grains may not be added because they conflict with
-                        Rundeck expected attributes: hostname, osName,
-                        osVersion, osFamily, osArch.
+                        Rundeck node attributes. Multiple grains may be
+                        specified when separated by a space or comma. Grains
+                        that are nested in a dictionary can be matched by
+                        adding a colon for each level that is traversed. The
+                        following grains may not be added because they
+                        conflict with Rundeck expected attributes: hostname,
+                        osName, osVersion, osFamily, osArch.
   --ignore-grains=IGNORE_GRAINS
                         Remove grains from the default list of grains mapped
-                        to Rundeck node tags. Multiple grains may be specified
-                        when separated by a space or comma.
+                        to Rundeck node attributes. Multiple grains may be
+                        specified when separated by a space or comma.
 
   Target Options:
     Target selection options.
@@ -152,13 +152,13 @@ A more complete example might look like this:
 resources.source.2.config.args=--mine-function allgrains --add-grains domain,selinux:enabled --ignore-grains manufacturer -S 10.0.1.0/24
 ```
 1. Use the mine function alias `allgrains` instead of `grains.items`.
-2. Create node tags in Rundeck for grains `domain` and `selinux:enabled`.
-3. Do not create node tags in Rundeck for the `manufacturer` grain.
+2. Create node attributes in Rundeck for grains `domain` and `selinux:enabled`.
+3. Do not create node attributes in Rundeck for the `manufacturer` grain.
 4. Only create Rundeck nodes for those minions on the 10.0.1.0/24 subnet.
 
 ### Validation
 
-This script can be run at any time from a shell. This can be useful when testing options. The result should be a YAML document sent to stdout, formatted according the Rundeck [resource-yaml specification](http://rundeck.org/docs/man5/resource-yaml.html). For example:
+This script can be run at any time from a shell. This can be useful when testing command line arguments. The result should be a YAML document sent to stdout, formatted according the Rundeck [resource-yaml specification](http://rundeck.org/docs/man5/resource-yaml.html). For example:
 ```
 app01:
   hostname: app01.example.org
