@@ -31,6 +31,7 @@ class SaltNodesCommand(
     epilog = None
 
     _config_filename_ = 'minion'
+    _server_node_name = 'localhost'
     _default_logging_logfile_ = os.path.join(
         syspaths.LOGS_DIR, 'salt-gen-resources.log')
     _setup_mp_logging_listener_ = False
@@ -61,8 +62,8 @@ class SaltNodesCommand(
         # Special handling for server node
         if self.options.include_server_node:
             local_grains = salt.loader.grains(caller.opts)
-            resources['localhost'] = {
-                'hostname':    'localhost',
+            resources[self._server_node_name] = {
+                'hostname':    self._server_node_name,
                 'description': 'Rundeck server node',
                 'username':    'rundeck',
                 'osName':      local_grains['kernel'],
@@ -71,8 +72,8 @@ class SaltNodesCommand(
                 'osArch':      self.os_arch_map[local_grains['osarch']]
             }
             # Create additional attributes from grains
-            resources['localhost'].update(
-                self.create_attributes(local_grains))
+            resources[self._server_node_name].update(
+                self.create_attributes(self._server_node_name, local_grains))
 
         # Map grains into a Rundeck resource dict
         for minion, minion_grains in mine.iteritems():
