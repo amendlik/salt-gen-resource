@@ -16,8 +16,9 @@ The only file required from this repository is [salt-gen-resource.py](salt-gen-r
 
 Because the script is essentially running the Salt Minion, it must be run as root. Add this to your sudoers policy to permit Rundeck to run it:
 ```
-rundeck ALL=(root) NOPASSWD: /opt/rundeck/scripts/salt-gen-resource.py
-Defaults!/opt/rundeck/scripts/salt-gen-resource.py !requiretty
+Cmnd_Alias SALT_GEN_RESOURCE = /opt/rundeck/scripts/salt-gen-resource/salt-gen-resource.py
+rundeck ALL=(root) NOPASSWD: SALT_GEN_RESOURCE
+Defaults!SALT_GEN_RESOURCE !requiretty
 ```
 
 ### Project configuration
