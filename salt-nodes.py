@@ -86,11 +86,11 @@ class SaltNodesCommand(
             }
             # Create additional attributes from grains
             resources[minion].update(
-                self.create_attributes(minion_grains))
+                self.create_attributes(minion, minion_grains))
 
         return resources
 
-    def create_attributes(self, grains):
+    def create_attributes(self, minion, grains):
         attributes = {}
         for grain in self.config['grains']:
             try:
