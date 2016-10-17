@@ -36,18 +36,20 @@ class SaltNodesCommand(
     _setup_mp_logging_listener_ = False
 
     config = {}
+
+    # Define lists of defaullt grains to add and ignore
     default_grains = ['os', 'os_family', 'osrelease', 'osmajorrelease',
                       'saltversion', 'virtual', 'manufacturer']
     ignore_grains = ['hostname', 'osName', 'osVersion', 'osFamily', 'osArch']
+
+    # Define maps from grain values into expected strings
+    os_family_map = {'Linux': 'unix', 'Windows': 'windows'}
+    os_arch_map = {'x86_64': 'amd64', 'x86': 'x86'}
 
     def get_nodes(self):
         resources = {}
         self.parse_args()
         caller = salt.client.Caller()
-
-        # Map grain values into expected strings
-        os_family_map = {'Linux': 'unix', 'Windows': 'windows'}
-        os_arch_map = {'x86_64': 'amd64', 'x86': 'x86'}
 
         # Call Salt Mine to retrive grains for all nodes
         mine = caller.cmd(
@@ -65,8 +67,8 @@ class SaltNodesCommand(
                 'username':    'rundeck',
                 'osName':      local_grains['kernel'],
                 'osVersion':   local_grains['kernelrelease'],
-                'osFamily':    os_family_map[local_grains['kernel']],
-                'osArch':      os_arch_map[local_grains['osarch']]
+                'osFamily':    self.os_family_map[local_grains['kernel']],
+                'osArch':      self.os_arch_map[local_grains['osarch']]
             }
             # Create additional attributes from grains
             resources['localhost'].update(
@@ -79,8 +81,8 @@ class SaltNodesCommand(
                 'hostname':   minion_grains['fqdn'],
                 'osName':     minion_grains['kernel'],
                 'osVersion':  minion_grains['kernelrelease'],
-                'osFamily':   os_family_map[minion_grains['kernel']],
-                'osArch':     os_arch_map[minion_grains['osarch']]
+                'osFamily':   self.os_family_map[minion_grains['kernel']],
+                'osArch':     self.os_arch_map[minion_grains['osarch']]
             }
             # Create additional attributes from grains
             resources[minion].update(
