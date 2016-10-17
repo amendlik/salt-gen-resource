@@ -73,6 +73,10 @@ Options:
                         Set the function name for Salt Mine to execute to
                         retrive grains. Default value is grains.items but this
                         could be different if mine function aliases are used.
+  --include-server-node
+                        Include the Rundeck server node in the output. The
+                        server node is required for some workflows and must be
+                        provided by exactly one resource provider.
   --grains=GRAINS       Override the default list of grains mapped to Rundeck
                         node attributes. The default list is: os, os_family,
                         osrelease, osmajorrelease, saltversion, virtual,
