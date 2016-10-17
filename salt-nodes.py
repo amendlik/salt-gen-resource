@@ -33,7 +33,7 @@ class SaltNodesCommand(
     _config_filename_ = 'minion'
     _default_logging_logfile_ = os.path.join(
         syspaths.LOGS_DIR, 'salt-gen-resources.log')
-    _setup_mp_logging_listener_ = True
+    _setup_mp_logging_listener_ = False
 
     config = {}
     default_grains = ['os', 'os_family', 'osrelease', 'osmajorrelease',
@@ -42,8 +42,8 @@ class SaltNodesCommand(
 
     def get_nodes(self):
         resources = {}
+        self.parse_args()
         caller = salt.client.Caller()
-        options = self.parse_args()[0]
 
         # Map grain values into expected strings
         os_family_map = {'Linux': 'unix', 'Windows': 'windows'}
@@ -68,11 +68,9 @@ class SaltNodesCommand(
                 'osFamily':    os_family_map[local_grains['kernel']],
                 'osArch':      os_arch_map[local_grains['osarch']]
             }
-            # Create optional tags from grains
-            map(lambda x: resources['localhost'].update(
-                {x.replace(':', '_'): salt.utils.traverse_dict_and_list(
-                    local_grains, x, default='', delimiter=options.delimiter)
-                }), self.config['grains'])
+            # Create additional attributes from grains
+            resources['localhost'].update(
+                self.create_attributes(local_grains))
 
         # Map grains into a Rundeck resource dict
         for minion, minion_grains in mine.iteritems():
@@ -84,13 +82,34 @@ class SaltNodesCommand(
                 'osFamily':   os_family_map[minion_grains['kernel']],
                 'osArch':     os_arch_map[minion_grains['osarch']]
             }
-            # Create optional tags from grains
-            map(lambda x: resources[minion].update(
-                {x.replace(':', '_'): salt.utils.traverse_dict_and_list(
-                    minion_grains, x, default='', delimiter=options.delimiter)
-                }), self.config['grains'])
+            # Create additional attributes from grains
+            resources[minion].update(
+                self.create_attributes(minion_grains))
 
         return resources
+
+    def create_attributes(self, grains):
+        attributes = {}
+        for grain in self.config['grains']:
+            try:
+                key, value = self.attribute_from_grain(grain, grains)
+                attributes[key] = value
+            except TypeError:
+                log.warning('Minion \'{0}\' grain \'{1}\' ignored because '
+                            'it contains nested items.'
+                            .format(minion, grain))
+        return attributes
+
+    def attribute_from_grain(self, item, grains):
+        key = item.replace(':', '_')
+        value = salt.utils.traverse_dict_and_list(
+            grains, item, default='',
+            delimiter=self.options.delimiter)
+        if isinstance(value, str):
+            value = value.encode('utf-8')
+        elif hasattr(value, '__iter__'):
+            raise TypeError
+        return (key, value)
 
     def _mixin_setup(self):
         self.add_option(
