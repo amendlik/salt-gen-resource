@@ -5,7 +5,12 @@ import salt.utils
 import salt.grains
 import salt.utils.parsers
 import salt.ext.six as six
+import salt.syspaths as syspaths
 import yaml
+import logging
+import os
+
+log = logging.getLogger(__name__)
 
 def list_callback(option, opt, value, parser): # pylint: disable=unused-argument
     if ',' in value:
@@ -19,10 +24,17 @@ class SaltNodesCommand(
             salt.utils.parsers.OptionParserMeta,
             salt.utils.parsers.OptionParser,
             salt.utils.parsers.ExtendedTargetOptionsMixIn,
-            salt.utils.parsers.ConfigDirMixIn)):
+            salt.utils.parsers.ConfigDirMixIn,
+            salt.utils.parsers.LogLevelMixIn)):
     usage = '%prog [options] \'<target>\''
     description = 'Salt Mine node source for Rundeck.'
     epilog = None
+
+    _config_filename_ = 'minion'
+    _default_logging_logfile_ = os.path.join(
+        syspaths.LOGS_DIR, 'salt-gen-resources.log')
+    _setup_mp_logging_listener_ = True
+
     config = {}
     default_grains = ['os', 'os_family', 'osrelease', 'osmajorrelease',
                       'saltversion', 'virtual', 'manufacturer']
@@ -162,6 +174,9 @@ class SaltNodesCommand(
         self.config['grains'] = [x for x in self.config[
             'grains'] if x not in self.ignore_grains]
 
+    def setup_config(self):
+        return salt.config.minion_config(self.get_config_file_path(),  # pylint: disable=no-member
+            cache_minion_id=True, ignore_config_errors=False)
 
 if __name__ == '__main__':
     # Print dict as YAML on stdout
