@@ -88,6 +88,9 @@ class SaltNodesCommand(
             # Create additional attributes from grains
             resources[minion].update(
                 self.create_attributes(minion, minion_grains))
+            # Create tags from grains
+            resources[minion]['tags'] = self.create_tags(
+                minion, minion_grains)
 
         return resources
 
@@ -113,6 +116,35 @@ class SaltNodesCommand(
         elif hasattr(value, '__iter__'):
             raise TypeError
         return (key, value)
+
+    def create_tags(self, minion, grains):
+        tags = set()
+        for item in self.options.tags:
+            try:
+                map(tags.add, self.tags_from_grain(item, grains))
+            except TypeError:
+                log.warning('Minion \'{0}\' grain \'{1}\' ignored because '
+                            'it contains nested items.'
+                            .format(minion, item))
+        return list(tags)
+
+    def tags_from_grain(self, item, grains):
+        #key = item.replace(':', '_')
+        tags = set()
+        value = salt.utils.traverse_dict_and_list(
+            grains, item, default='',
+            delimiter=self.options.delimiter)
+        if isinstance(value, unicode):
+            tags.add(value.encode('utf-8'))
+        elif isinstance(value, basestring):
+            tags.add(value)
+        elif isinstance(value, dict):
+            raise TypeError
+        elif hasattr(value, '__iter__'):
+            map(tags.add, value)
+        else:
+            tags.add(value)
+        return tags
 
     def _mixin_setup(self):
         self.add_option(
@@ -171,6 +203,13 @@ class SaltNodesCommand(
             help=('Remove grains from the default list of grains mapped to '
                   'Rundeck node attributes. Multiple grains may be specified '
                   'when separated by a space or comma.')
+        )
+        self.add_option(
+            '-t', '--tags',
+            type=str,
+            action='callback',
+            callback=list_callback,
+            help=('Create tags from grains')
         )
 
     def _mixin_after_parsed(self):
