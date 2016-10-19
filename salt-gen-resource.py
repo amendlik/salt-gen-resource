@@ -89,8 +89,9 @@ class SaltNodesCommand(
             resources[minion].update(
                 self.create_attributes(minion, minion_grains))
             # Create tags from grains
-            resources[minion]['tags'] = self.create_tags(
-                minion, minion_grains)
+            tags = self.create_tags(minion, minion_grains)
+            if len(tags) > 0:
+                resources[minion]['tags'] = tags
 
         return resources
 
@@ -119,13 +120,14 @@ class SaltNodesCommand(
 
     def create_tags(self, minion, grains):
         tags = set()
-        for item in self.options.tags:
-            try:
-                map(tags.add, self.tags_from_grain(item, grains))
-            except TypeError:
-                log.warning('Minion \'{0}\' grain \'{1}\' ignored because '
-                            'it contains nested items.'
-                            .format(minion, item))
+        if self.options.tags is not None:
+            for item in self.options.tags:
+                try:
+                    map(tags.add, self.tags_from_grain(item, grains))
+                except TypeError:
+                    log.warning('Minion \'{0}\' grain \'{1}\' ignored because '
+                                'it contains nested items.'
+                                .format(minion, item))
         return list(tags)
 
     def tags_from_grain(self, item, grains):
