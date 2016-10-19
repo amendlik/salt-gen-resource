@@ -70,11 +70,11 @@ Options:
   -c CONFIG_DIR, --config-dir=CONFIG_DIR
                         Pass in an alternative configuration directory.
                         Default: '/etc/salt'.
-  --mine-function=MINE_FUNCTION
+  -m MINE_FUNCTION, --mine-function=MINE_FUNCTION
                         Set the function name for Salt Mine to execute to
                         retrive grains. Default value is grains.items but this
                         could be different if mine function aliases are used.
-  --include-server-node
+  -s, --include-server-node
                         Include the Rundeck server node in the output. The
                         server node is required for some workflows and must be
                         provided by exactly one resource provider.
@@ -83,23 +83,10 @@ Options:
                         server node. This would typically be the same user
                         that the Rundeck service is running as. Default:
                         'rundeck'.
-  --grains=GRAINS       Override the default list of grains mapped to Rundeck
-                        node attributes. The default list is: os, os_family,
-                        osrelease, osmajorrelease, saltversion, virtual,
-                        manufacturer.
-  --add-grains=ADD_GRAINS
-                        Add grains to the default list of grains mapped to
-                        Rundeck node attributes. Multiple grains may be
-                        specified when separated by a space or comma. Grains
-                        that are nested in a dictionary can be matched by
-                        adding a colon for each level that is traversed. The
-                        following grains may not be added because they
-                        conflict with Rundeck expected attributes: hostname,
-                        osName, osVersion, osFamily, osArch.
-  --ignore-grains=IGNORE_GRAINS
-                        Remove grains from the default list of grains mapped
-                        to Rundeck node attributes. Multiple grains may be
-                        specified when separated by a space or comma.
+  -a ATTRIBUTES, --attributes=ATTRIBUTES
+                        Create Rundeck node attributes from the values of
+                        grains. Multiple grains may be specified when
+                        separated by a space or comma.
   -t TAGS, --tags=TAGS  Create Rundeck node tags from the values of grains.
                         Multiple grains may be specified when separated by a
                         space or comma.
@@ -110,13 +97,6 @@ Options:
 
     -l LOG_LEVEL, --log-level=LOG_LEVEL
                         Console logging log level. One of 'all', 'garbage',
-                        'trace', 'debug', 'profile', 'info', 'warning',
-                        'error', 'critical', 'quiet'. Default: 'warning'.
-    --log-file=LOG_FILE
-                        Log file path. Default: '/var/log/salt/salt-gen-
-                        resources.log'.
-    --log-file-level=LOG_LEVEL_LOGFILE
-                        Logfile logging log level. One of 'all', 'garbage',
                         'trace', 'debug', 'profile', 'info', 'warning',
                         'error', 'critical', 'quiet'. Default: 'warning'.
 

@@ -163,7 +163,7 @@ class SaltNodesCommand(
 
     def _mixin_setup(self):
         self.add_option(
-            '--mine-function',
+            '-m', '--mine-function',
             default='grains.items',
             type=str,
             help=('Set the function name for Salt Mine to execute '
@@ -172,7 +172,7 @@ class SaltNodesCommand(
                   'aliases are used.')
         )
         self.add_option(
-            '--include-server-node',
+            '-s', '--include-server-node',
             action="store_true",
             help=('Include the Rundeck server node in the output. '
                   'The server node is required for some workflows '
