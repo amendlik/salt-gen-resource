@@ -206,6 +206,8 @@ class SaltNodesCommand(
                   'Multiple grains may be specified '
                   'when separated by a space or comma.')
         )
+        self.logging_options_group.remove_option('--log-file')
+        self.logging_options_group.remove_option('--log-file-level')
 
     def _mixin_after_parsed(self):
         # Extract targeting expression
