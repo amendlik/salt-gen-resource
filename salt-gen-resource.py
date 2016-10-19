@@ -36,8 +36,9 @@ class SaltNodesCommand(
         syspaths.LOGS_DIR, 'salt-gen-resources.log')
     _setup_mp_logging_listener_ = False
 
-    # Define list of grains to ignore
-    ignore_grains = ['hostname', 'osName', 'osVersion', 'osFamily', 'osArch']
+    # Define list of attribute grains to ignore
+    ignore_attributes = ['hostname', 'osName', 'osVersion',
+                         'osFamily', 'osArch']
 
     # Define maps from grain values into expected strings
     os_family_map = {'Linux': 'unix', 'Windows': 'windows'}
@@ -218,7 +219,7 @@ class SaltNodesCommand(
 
         # Remove conflicting grains
         self.config['attributes'] = [x for x in self.options.attributes \
-            if x not in self.ignore_grains]
+            if x not in self.ignore_attributes]
 
     def setup_config(self):
         return salt.config.minion_config(self.get_config_file_path(),  # pylint: disable=no-member
