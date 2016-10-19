@@ -35,6 +35,11 @@ class SaltNodesCommand(
     _default_logging_logfile_ = os.path.join(
         syspaths.LOGS_DIR, 'salt-gen-resources.log')
     _setup_mp_logging_listener_ = False
+    _default_logging_level_ = 'warning'
+    config = {'extension_modules': '',
+              'log_level': _default_logging_level_,
+              'log_granular_levels': {},
+              'cython_enable': False}
 
     # Define list of attribute grains to ignore
     ignore_attributes = ['hostname', 'osName', 'osVersion',
@@ -224,10 +229,6 @@ class SaltNodesCommand(
         # Remove conflicting grains
         self.config['attributes'] = [x for x in self.options.attributes \
             if x not in self.ignore_attributes]
-
-    def setup_config(self):
-        return salt.config.minion_config(self.get_config_file_path(),  # pylint: disable=no-member
-            cache_minion_id=True, ignore_config_errors=False)
 
 if __name__ == '__main__':
     # Print dict as YAML on stdout
