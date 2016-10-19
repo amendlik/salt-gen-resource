@@ -88,6 +88,10 @@ class SaltNodesCommand(
             # Create additional attributes from grains
             resources[minion].update(
                 self.create_attributes(minion, minion_grains))
+            # Create tags from grains
+            tags = self.create_tags(minion, minion_grains)
+            if len(tags) > 0:
+                resources[minion]['tags'] = tags
 
         return resources
 
@@ -113,6 +117,42 @@ class SaltNodesCommand(
         elif hasattr(value, '__iter__'):
             raise TypeError
         return (key, value)
+
+    def create_tags(self, minion, grains):
+        tags = set()
+        if self.options.tags is not None:
+            for item in self.options.tags:
+                try:
+                    map(tags.add, self.tags_from_grain(item, grains))
+                except TypeError:
+                    log.warning('Minion \'{0}\' grain \'{1}\' ignored because '
+                                'it contains nested items.'
+                                .format(minion, item))
+        return list(tags)
+
+    def tags_from_grain(self, item, grains):
+        tags = set()
+        value = salt.utils.traverse_dict_and_list(
+            grains, item, default=None, delimiter=self.options.delimiter)
+        if value is None:
+            pass
+        elif isinstance(value, unicode):
+            tags.add(value.encode('utf-8'))
+        elif isinstance(value, basestring):
+            tags.add(value)
+        elif isinstance(value, dict):
+            raise TypeError
+        elif hasattr(value, '__iter__'):
+            for nesteditem in value:
+                if hasattr(nesteditem, '__iter__'):
+                    pass
+                elif isinstance(nesteditem, unicode):
+                    tags.add(nesteditem.encode('utf-8'))
+                else:
+                    tags.add(nesteditem)
+        else:
+            tags.add(value)
+        return tags
 
     def _mixin_setup(self):
         self.add_option(
@@ -170,6 +210,15 @@ class SaltNodesCommand(
             callback=list_callback,
             help=('Remove grains from the default list of grains mapped to '
                   'Rundeck node attributes. Multiple grains may be specified '
+                  'when separated by a space or comma.')
+        )
+        self.add_option(
+            '-t', '--tags',
+            type=str,
+            action='callback',
+            callback=list_callback,
+            help=('Create Rundeck node tags from the values of grains. '
+                  'Multiple grains may be specified '
                   'when separated by a space or comma.')
         )
 
