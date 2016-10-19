@@ -73,7 +73,7 @@ class SaltNodesCommand(
             }
             # Create additional attributes from grains
             resources[self._server_node_name].update(
-                self.create_attributes(self._server_node_name, local_grains))
+                self._create_attributes(self._server_node_name, local_grains))
 
         # Map grains into a Rundeck resource dict
         for minion, minion_grains in mine.iteritems():
@@ -87,19 +87,19 @@ class SaltNodesCommand(
             }
             # Create additional attributes from grains
             resources[minion].update(
-                self.create_attributes(minion, minion_grains))
+                self._create_attributes(minion, minion_grains))
             # Create tags from grains
-            tags = self.create_tags(minion, minion_grains)
+            tags = self._create_tags(minion, minion_grains)
             if len(tags) > 0:
                 resources[minion]['tags'] = tags
 
         return resources
 
-    def create_attributes(self, minion, grains):
+    def _create_attributes(self, minion, grains):
         attributes = {}
         for grain in self.config['grains']:
             try:
-                key, value = self.attribute_from_grain(grain, grains)
+                key, value = self._attribute_from_grain(grain, grains)
                 attributes[key] = value
             except TypeError:
                 log.warning('Minion \'{0}\' grain \'{1}\' ignored because '
@@ -107,7 +107,7 @@ class SaltNodesCommand(
                             .format(minion, grain))
         return attributes
 
-    def attribute_from_grain(self, item, grains):
+    def _attribute_from_grain(self, item, grains):
         key = item.replace(':', '_')
         value = salt.utils.traverse_dict_and_list(
             grains, item, default='',
@@ -118,19 +118,19 @@ class SaltNodesCommand(
             raise TypeError
         return (key, value)
 
-    def create_tags(self, minion, grains):
+    def _create_tags(self, minion, grains):
         tags = set()
         if self.options.tags is not None:
             for item in self.options.tags:
                 try:
-                    map(tags.add, self.tags_from_grain(item, grains))
+                    map(tags.add, self._tags_from_grain(item, grains))
                 except TypeError:
                     log.warning('Minion \'{0}\' grain \'{1}\' ignored because '
                                 'it contains nested items.'
                                 .format(minion, item))
         return list(tags)
 
-    def tags_from_grain(self, item, grains):
+    def _tags_from_grain(self, item, grains):
         tags = set()
         value = salt.utils.traverse_dict_and_list(
             grains, item, default=None, delimiter=self.options.delimiter)
