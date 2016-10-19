@@ -129,19 +129,25 @@ class SaltNodesCommand(
         return list(tags)
 
     def tags_from_grain(self, item, grains):
-        #key = item.replace(':', '_')
         tags = set()
         value = salt.utils.traverse_dict_and_list(
-            grains, item, default='',
-            delimiter=self.options.delimiter)
-        if isinstance(value, unicode):
+            grains, item, default=None, delimiter=self.options.delimiter)
+        if value is None:
+            pass
+        elif isinstance(value, unicode):
             tags.add(value.encode('utf-8'))
         elif isinstance(value, basestring):
             tags.add(value)
         elif isinstance(value, dict):
             raise TypeError
         elif hasattr(value, '__iter__'):
-            map(tags.add, value)
+            for nesteditem in value:
+                if hasattr(nesteditem, '__iter__'):
+                    pass
+                elif isinstance(nesteditem, unicode):
+                    tags.add(nesteditem.encode('utf-8'))
+                else:
+                    tags.add(nesteditem)
         else:
             tags.add(value)
         return tags
