@@ -36,9 +36,7 @@ class SaltNodesCommand(
         syspaths.LOGS_DIR, 'salt-gen-resources.log')
     _setup_mp_logging_listener_ = False
 
-    # Define lists of defaullt grains to add and ignore
-    default_grains = ['os', 'os_family', 'osrelease', 'osmajorrelease',
-                      'saltversion', 'virtual', 'manufacturer']
+    # Define list of grains to ignore
     ignore_grains = ['hostname', 'osName', 'osVersion', 'osFamily', 'osArch']
 
     # Define maps from grain values into expected strings
@@ -97,13 +95,13 @@ class SaltNodesCommand(
 
     def _create_attributes(self, minion, grains):
         attributes = {}
-        for grain in self.config['grains']:
+        for item in self.config['attributes']:
             try:
-                key, value = self._attribute_from_grain(grain, grains)
+                key, value = self._attribute_from_grain(item, grains)
                 attributes[key] = value
             except TypeError:
-                log.warning('Minion \'{0}\' grain \'{1}\' ignored because '
-                            'it contains nested items.'
+                log.warning('Minion \'{0}\' grain \'{1}\' ignored '
+                            'because it contains nested items.'
                             .format(minion, grain))
         return attributes
 
@@ -120,14 +118,13 @@ class SaltNodesCommand(
 
     def _create_tags(self, minion, grains):
         tags = set()
-        if self.options.tags is not None:
-            for item in self.options.tags:
-                try:
-                    map(tags.add, self._tags_from_grain(item, grains))
-                except TypeError:
-                    log.warning('Minion \'{0}\' grain \'{1}\' ignored because '
-                                'it contains nested items.'
-                                .format(minion, item))
+        for item in self.options.tags:
+            try:
+                map(tags.add, self._tags_from_grain(item, grains))
+            except TypeError:
+                log.warning('Minion \'{0}\' grain \'{1}\' ignored '
+                            'because it contains nested items.'
+                            .format(minion, item))
         return list(tags)
 
     def _tags_from_grain(self, item, grains):
@@ -180,41 +177,19 @@ class SaltNodesCommand(
                   'the Rundeck service is running as. Default: \'rundeck\'.')
         )
         self.add_option(
-            '--grains',
+            '-a', '--attributes',
             type=str,
-            default=self.default_grains,
+            default=[],
             action='callback',
             callback=list_callback,
-            help=('Override the default list of grains mapped to '
-                  'Rundeck node attributes. The default list is: {0}.'
-                  .format(', '.join(self.default_grains)))
-        )
-        self.add_option(
-            '--add-grains',
-            type=str,
-            action='callback',
-            callback=list_callback,
-            help=('Add grains to the default list of grains mapped to '
-                  'Rundeck node attributes. Multiple grains may be specified '
-                  'when separated by a space or comma. '
-                  'Grains that are nested in a dictionary can be matched '
-                  'by adding a colon for each level that is traversed. '
-                  'The following grains may not be added because they '
-                  'conflict with Rundeck expected attributes: {0}.'
-                  .format(', '.join(self.ignore_grains)))
-        )
-        self.add_option(
-            '--ignore-grains',
-            type=str,
-            action='callback',
-            callback=list_callback,
-            help=('Remove grains from the default list of grains mapped to '
-                  'Rundeck node attributes. Multiple grains may be specified '
+            help=('Create Rundeck node attributes from the values of grains. '
+                  'Multiple grains may be specified '
                   'when separated by a space or comma.')
         )
         self.add_option(
             '-t', '--tags',
             type=str,
+            default=[],
             action='callback',
             callback=list_callback,
             help=('Create Rundeck node tags from the values of grains. '
@@ -241,17 +216,9 @@ class SaltNodesCommand(
         if self.config['selected_target_option'] is None:
             self.config['selected_target_option'] = 'glob'
 
-        # Add additional grains
-        self.config['grains'] = self.options.grains
-        if self.options.add_grains is not None:
-            self.config['grains'] = sorted(list(set(
-                self.config['grains']).union(set(self.options.add_grains))))
-
-        # Remove unneeded grains
-        if self.options.ignore_grains is not None:
-            self.ignore_grains.extend(self.options.ignore_grains)
-        self.config['grains'] = [x for x in self.config[
-            'grains'] if x not in self.ignore_grains]
+        # Remove conflicting grains
+        self.config['attributes'] = [x for x in self.options.attributes \
+            if x not in self.ignore_grains]
 
     def setup_config(self):
         return salt.config.minion_config(self.get_config_file_path(),  # pylint: disable=no-member
