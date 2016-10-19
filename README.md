@@ -100,6 +100,9 @@ Options:
                         Remove grains from the default list of grains mapped
                         to Rundeck node attributes. Multiple grains may be
                         specified when separated by a space or comma.
+  -t TAGS, --tags=TAGS  Create Rundeck node tags from the values of grains.
+                        Multiple grains may be specified when separated by a
+                        space or comma.
 
   Logging Options:
     Logging options which override any settings defined on the
@@ -171,19 +174,22 @@ The only required argument is a targeting expression. This has the effect of lim
 ```
 resources.source.2.config.args=*
 ```
-### Grains
+### Node Attributes
 By default, this script will map these grains to Rundeck node attributes: `os`, `os_family`, `osrelease`, `osmajorrelease`, `saltversion`, `virtual`, and `manufacturer`. Use the `--grains`, `--add-grains`, and `--ignore-grains` options to gather different grains.
+### Node Tags
+Node tags can be added by including the `--tags` argument. This is particularly useful when the value of a grain is a list, because a tag will be created for each item in the list. A common example of this is a `roles` grain. Tags will also be created for single value grains. For example, `--tags=init` will tag every Linux system with `systemd`, `upstart`, etc.
 ### Mine function
 By default, this script depends on Salt Mine having access to `grains.items` on every minion. If you have an alias in place for that function, specify it using the `--mine-function` option.
 ### Example
 A more complete example might look like this:
 ```
-resources.source.2.config.args=--mine-function allgrains --add-grains domain,selinux:enabled --ignore-grains manufacturer -S 10.0.1.0/24
+resources.source.2.config.args=--mine-function allgrains --add-grains domain,selinux:enabled --ignore-grains manufacturer --tags roles,init -S 10.0.1.0/24
 ```
 1. Use the mine function alias `allgrains` instead of `grains.items`.
 2. Create node attributes in Rundeck for grains `domain` and `selinux:enabled`.
 3. Do not create node attributes in Rundeck for the `manufacturer` grain.
-4. Only create Rundeck nodes for those minions on the 10.0.1.0/24 subnet.
+4. Create tags for every element of the `roles` grain, and a tag for the value of the `init` grain.
+5. Only create Rundeck nodes for those minions on the 10.0.1.0/24 subnet.
 
 ### Validation
 

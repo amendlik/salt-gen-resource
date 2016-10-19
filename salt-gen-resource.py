@@ -215,7 +215,9 @@ class SaltNodesCommand(
             type=str,
             action='callback',
             callback=list_callback,
-            help=('Create tags from grains')
+            help=('Create Rundeck node tags from the values of grains. '
+                  'Multiple grains may be specified '
+                  'when separated by a space or comma.')
         )
 
     def _mixin_after_parsed(self):
