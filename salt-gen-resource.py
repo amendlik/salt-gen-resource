@@ -43,7 +43,7 @@ class SaltNodesCommand(
 
     # Define list of attribute grains to ignore
     ignore_attributes = ['hostname', 'osName', 'osVersion',
-                         'osFamily', 'osArch']
+                         'osFamily', 'osArch', 'tags']
 
     # Define maps from grain values into expected strings
     os_family_map = {'Linux': 'unix', 'Windows': 'windows'}
