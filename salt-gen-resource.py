@@ -79,7 +79,7 @@ class SaltNodesCommand(
             resources[self._server_node_name].update(
                 self._create_attributes(self._server_node_name, local_grains))
             # Create tags from grains
-            tags = self._create_tags(minion, minion_grains)
+            tags = self._create_tags(self._server_node_name, local_grains)
             if len(tags) > 0:
                 resources[self._server_node_name]['tags'] = tags
 
