@@ -11,13 +11,18 @@ class TestResourceGenerator(unittest.TestCase):
     required_attributes = ['hostname', 'osArch', 'osFamily',
                            'osName', 'osVersion']
 
-    def test_glob(self):
+    def test_glob_targeting(self):
         args = ['*']
         resources = ResourceGenerator(args).get_nodes()
         self._test_required_attributes(resources)
 
-    def test_cidr(self):
+    def test_cidr_targeting(self):
         args = ['-S', '0.0.0.0/0']
+        resources = ResourceGenerator(args).get_nodes()
+        self._test_required_attributes(resources)
+
+    def test_grain_targeting(self):
+        args = ['-G', 'os:*']
         resources = ResourceGenerator(args).get_nodes()
         self._test_required_attributes(resources)
 
