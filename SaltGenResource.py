@@ -12,14 +12,15 @@ import os
 
 log = logging.getLogger(__name__)
 
-def list_callback(option, opt, value, parser): # pylint: disable=unused-argument
+
+def list_callback(option, opt, value, parser):  # pylint: disable=unused-argument
     if ',' in value:
         setattr(parser.values, option.dest, value.replace(' ', '').split(','))
     else:
         setattr(parser.values, option.dest, value.split())
 
 
-class SaltNodesCommand(
+class SaltNodesCommandParser(
         six.with_metaclass(
             salt.utils.parsers.OptionParserMeta,
             salt.utils.parsers.OptionParser,
@@ -45,13 +46,90 @@ class SaltNodesCommand(
     ignore_attributes = ['hostname', 'osName', 'osVersion',
                          'osFamily', 'osArch', 'tags']
 
+    def _mixin_setup(self):
+        self.add_option(
+            '-m', '--mine-function',
+            default='grains.items',
+            type=str,
+            help=('Set the function name for Salt Mine to execute '
+                  'to retrive grains. Default value is grains.items '
+                  'but this could be different if mine function '
+                  'aliases are used.')
+        )
+        self.add_option(
+            '-s', '--include-server-node',
+            action="store_true",
+            help=('Include the Rundeck server node in the output. '
+                  'The server node is required for some workflows '
+                  'and must be provided by exactly one resource provider.')
+        )
+        self.add_option(
+            '-u', '--server-node-user',
+            type=str,
+            default='rundeck',
+            help=('Specify the user name to use when running jobs on the '
+                  'server node. This would typically be the same user that '
+                  'the Rundeck service is running as. Default: \'rundeck\'.')
+        )
+        self.add_option(
+            '-a', '--attributes',
+            type=str,
+            default=[],
+            action='callback',
+            callback=list_callback,
+            help=('Create Rundeck node attributes from the values of grains. '
+                  'Multiple grains may be specified '
+                  'when separated by a space or comma.')
+        )
+        self.add_option(
+            '-t', '--tags',
+            type=str,
+            default=[],
+            action='callback',
+            callback=list_callback,
+            help=('Create Rundeck node tags from the values of grains. '
+                  'Multiple grains may be specified '
+                  'when separated by a space or comma.')
+        )
+        self.logging_options_group.remove_option('--log-file')
+        self.logging_options_group.remove_option('--log-file-level')
+
+    def _mixin_after_parsed(self):
+        # Extract targeting expression
+        try:
+            if self.options.list:
+                if ',' in self.args[0]:
+                    self.config['tgt'] = \
+                        self.args[0].replace(' ', '').split(',')
+                else:
+                    self.config['tgt'] = self.args[0].split()
+            else:
+                self.config['tgt'] = self.args[0]
+        except IndexError:
+            self.exit(42, ('\nCannot execute command without '
+                           'defining a target.\n\n'))
+
+        # Set default targeting option
+        if self.config['selected_target_option'] is None:
+            self.config['selected_target_option'] = 'glob'
+
+        # Remove conflicting grains
+        self.config['attributes'] = [x for x in self.options.attributes
+                                     if x not in self.ignore_attributes]
+
+
+class ResourceGenerator(SaltNodesCommandParser):
+
     # Define maps from grain values into expected strings
     os_family_map = {'Linux': 'unix', 'Windows': 'windows'}
     os_arch_map = {'x86_64': 'amd64', 'x86': 'x86'}
 
+    def __init__(self, args=None):
+        super(SaltNodesCommandParser, self).__init__()
+        self.parse_args(args)
+
     def get_nodes(self):
         resources = {}
-        self.parse_args()
 
         caller = salt.client.Caller(
             os.path.join(self.options.config_dir, self._config_filename_))
@@ -161,79 +239,6 @@ class SaltNodesCommand(
             tags.add(value)
         return tags
 
-    def _mixin_setup(self):
-        self.add_option(
-            '-m', '--mine-function',
-            default='grains.items',
-            type=str,
-            help=('Set the function name for Salt Mine to execute '
-                  'to retrive grains. Default value is grains.items '
-                  'but this could be different if mine function '
-                  'aliases are used.')
-        )
-        self.add_option(
-            '-s', '--include-server-node',
-            action="store_true",
-            help=('Include the Rundeck server node in the output. '
-                  'The server node is required for some workflows '
-                  'and must be provided by exactly one resource provider.')
-        )
-        self.add_option(
-            '-u', '--server-node-user',
-            type=str,
-            default='rundeck',
-            help=('Specify the user name to use when running jobs on the '
-                  'server node. This would typically be the same user that '
-                  'the Rundeck service is running as. Default: \'rundeck\'.')
-        )
-        self.add_option(
-            '-a', '--attributes',
-            type=str,
-            default=[],
-            action='callback',
-            callback=list_callback,
-            help=('Create Rundeck node attributes from the values of grains. '
-                  'Multiple grains may be specified '
-                  'when separated by a space or comma.')
-        )
-        self.add_option(
-            '-t', '--tags',
-            type=str,
-            default=[],
-            action='callback',
-            callback=list_callback,
-            help=('Create Rundeck node tags from the values of grains. '
-                  'Multiple grains may be specified '
-                  'when separated by a space or comma.')
-        )
-        self.logging_options_group.remove_option('--log-file')
-        self.logging_options_group.remove_option('--log-file-level')
-
-    def _mixin_after_parsed(self):
-        # Extract targeting expression
-        try:
-            if self.options.list:
-                if ',' in self.args[0]:
-                    self.config['tgt'] = \
-                        self.args[0].replace(' ', '').split(',')
-                else:
-                    self.config['tgt'] = self.args[0].split()
-            else:
-                self.config['tgt'] = self.args[0]
-        except IndexError:
-            self.exit(42, ('\nCannot execute command without '
-                           'defining a target.\n\n'))
-
-        # Set default targeting option
-        if self.config['selected_target_option'] is None:
-            self.config['selected_target_option'] = 'glob'
-
-        # Remove conflicting grains
-        self.config['attributes'] = [x for x in self.options.attributes \
-            if x not in self.ignore_attributes]
-
 if __name__ == '__main__':
     # Print dict as YAML on stdout
-    print(yaml.dump(SaltNodesCommand().get_nodes(), default_flow_style=False))
-
-
+    print(yaml.dump(ResourceGenerator().get_nodes(), default_flow_style=False))
