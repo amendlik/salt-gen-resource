@@ -26,6 +26,16 @@ class TestResourceGenerator(unittest.TestCase):
         resources = ResourceGenerator(args).get_nodes()
         self._test_required_attributes(resources)
 
+    def test_pcre_targeting(self):
+        args = ['-E', '.*']
+        resources = ResourceGenerator(args).get_nodes()
+        self._test_required_attributes(resources)
+
+    def test_grain_pcre_targeting(self):
+        args = ['-P', 'os:.*']
+        resources = ResourceGenerator(args).get_nodes()
+        self._test_required_attributes(resources)
+
     def _test_required_attributes(self, resources):
         for host, attributes in resources.iteritems():
             for attribute in self.required_attributes:
