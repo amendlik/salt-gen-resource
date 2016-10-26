@@ -72,7 +72,7 @@ Options:
                         Default: '/etc/salt'.
   -m MINE_FUNCTION, --mine-function=MINE_FUNCTION
                         Set the function name for Salt Mine to execute to
-                        retrive grains. Default value is grains.items but this
+                        retrieve grains. Default value is grains.items but this
                         could be different if mine function aliases are used.
   -s, --include-server-node
                         Include the Rundeck server node in the output. The

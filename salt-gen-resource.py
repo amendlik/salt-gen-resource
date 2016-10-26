@@ -56,7 +56,7 @@ class SaltNodesCommand(
         caller = salt.client.Caller(
             os.path.join(self.options.config_dir, self._config_filename_))
 
-        # Call Salt Mine to retrive grains for all nodes
+        # Call Salt Mine to retrieve grains for all nodes
         mine = caller.cmd(
             'mine.get', self.config['tgt'],
             self.options.mine_function,
@@ -167,7 +167,7 @@ class SaltNodesCommand(
             default='grains.items',
             type=str,
             help=('Set the function name for Salt Mine to execute '
-                  'to retrive grains. Default value is grains.items '
+                  'to retrieve grains. Default value is grains.items '
                   'but this could be different if mine function '
                   'aliases are used.')
         )
