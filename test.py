@@ -80,6 +80,7 @@ class TestNodeGenerator(unittest.TestCase):
         self._test_tags(resources, tags)
 
     def _test_attributes(self, resources, needed):
+        self.assertTrue(len(resources) > 0)
         for host, attributes in resources.iteritems():
             for attribute in needed:
                 self.assertIn(attribute, attributes)
@@ -87,6 +88,7 @@ class TestNodeGenerator(unittest.TestCase):
                 self.assertNotEqual(attributes[attribute], '')
 
     def _test_tags(self, resources, needed):
+        self.assertTrue(len(resources) > 0)
         for host, attributes in resources.iteritems():
             self.assertIn('tags', attributes)
             self.assertIsNotNone(attributes['tags'])
