@@ -13,13 +13,6 @@ import os
 log = logging.getLogger(__name__)
 
 
-def list_callback(option, opt, value, parser):  # pylint: disable=unused-argument
-    if ',' in value:
-        setattr(parser.values, option.dest, value.replace(' ', '').split(','))
-    else:
-        setattr(parser.values, option.dest, value.split())
-
-
 class SaltNodesCommandParser(
         six.with_metaclass(
             salt.utils.parsers.OptionParserMeta,
@@ -75,7 +68,7 @@ class SaltNodesCommandParser(
             type=str,
             default=[],
             action='callback',
-            callback=list_callback,
+            callback=self.list_callback,
             help=('Create Rundeck node attributes from the values of grains. '
                   'Multiple grains may be specified '
                   'when separated by a space or comma.')
@@ -85,7 +78,7 @@ class SaltNodesCommandParser(
             type=str,
             default=[],
             action='callback',
-            callback=list_callback,
+            callback=self.list_callback,
             help=('Create Rundeck node tags from the values of grains. '
                   'Multiple grains may be specified '
                   'when separated by a space or comma.')
@@ -115,6 +108,14 @@ class SaltNodesCommandParser(
         # Remove conflicting grains
         self.config['attributes'] = [x for x in self.options.attributes
                                      if x not in self.ignore_attributes]
+
+    @staticmethod
+    def list_callback(option, opt, value, parser):  # pylint: disable=unused-argument
+        if ',' in value:
+            setattr(parser.values, option.dest,
+                    value.replace(' ', '').split(','))
+        else:
+            setattr(parser.values, option.dest, value.split())
 
 
 class ResourceGenerator(SaltNodesCommandParser):
