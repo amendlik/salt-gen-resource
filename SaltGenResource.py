@@ -128,7 +128,7 @@ class ResourceGenerator(SaltNodesCommandParser):
         super(SaltNodesCommandParser, self).__init__()
         self.parse_args(args)
 
-    def get_nodes(self):
+    def run(self):
         resources = {}
 
         caller = salt.client.Caller(
@@ -241,4 +241,4 @@ class ResourceGenerator(SaltNodesCommandParser):
 
 if __name__ == '__main__':
     # Print dict as YAML on stdout
-    print(yaml.dump(ResourceGenerator().get_nodes(), default_flow_style=False))
+    print(yaml.dump(ResourceGenerator().run(), default_flow_style=False))
