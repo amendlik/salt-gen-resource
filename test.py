@@ -97,8 +97,10 @@ class TestServerNodeGenerator(TestNodeGenerator):
 
     def _test_attributes(self, resources, needed):
         super(TestServerNodeGenerator, self)._test_attributes(resources, needed)
-        self.assertIn('localhost', resources)
-        self.assertEqual(resources['localhost']['hostname'], 'localhost')
+        self.assertIn(ResourceGenerator._server_node_name, resources)
+        self.assertEqual(
+            resources[ResourceGenerator._server_node_name]['hostname'],
+            ResourceGenerator._server_node_name)
 
 
 if __name__ == '__main__':
