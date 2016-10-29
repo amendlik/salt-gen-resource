@@ -32,7 +32,6 @@ class SaltNodesCommandParser(
     epilog = None
 
     _config_filename_ = 'minion'
-    _server_node_name = 'localhost'
     _default_logging_logfile_ = os.path.join(
         syspaths.LOGS_DIR, 'salt-gen-resources.log')
     _setup_mp_logging_listener_ = False
@@ -123,6 +122,7 @@ class ResourceGenerator(SaltNodesCommandParser):
     # Define maps from grain values into expected strings
     os_family_map = {'Linux': 'unix', 'Windows': 'windows'}
     os_arch_map = {'x86_64': 'amd64', 'x86': 'x86'}
+    _server_node_name = 'localhost'
 
     def __init__(self, args=None):
         super(SaltNodesCommandParser, self).__init__()
