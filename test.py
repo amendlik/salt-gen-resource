@@ -25,7 +25,7 @@ class TestMapping(unittest.TestCase):
 
 class TestNodeGenerator(unittest.TestCase):
 
-    _base_args = []
+    _base_args = ['-l', 'quiet']
     required_attributes = ['hostname', 'osArch', 'osFamily',
                            'osName', 'osVersion']
 
@@ -112,7 +112,7 @@ class TestNodeGenerator(unittest.TestCase):
             self.assertTrue(len(attributes['tags']) >= len(needed))
 
 class TestServerNodeGenerator(TestNodeGenerator):
-    _base_args = ['--include-server-node']
+    _base_args = TestNodeGenerator._base_args + ['--include-server-node']
 
     def _test_attributes(self, resources, needed):
         super(TestServerNodeGenerator, self)._test_attributes(resources, needed)
