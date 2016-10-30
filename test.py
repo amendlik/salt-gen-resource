@@ -5,6 +5,23 @@ else:
     import unittest
 from SaltGenResource import ResourceGenerator
 
+class TestMapping(unittest.TestCase):
+
+    def test_os_family_map1(self):
+        os_family = ResourceGenerator._os_family('Linux')
+        self.assertEqual(os_family, 'unix')
+
+    def test_os_family_map2(self):
+        os_family = ResourceGenerator._os_family('unknown')
+        self.assertEqual(os_family, 'unknown')
+
+    def test_os_arch_map1(self):
+        os_arch = ResourceGenerator._os_arch('x86_64')
+        self.assertEqual(os_arch, 'amd64')
+
+    def test_os_arch_map2(self):
+        os_arch = ResourceGenerator._os_arch('unknown')
+        self.assertEqual(os_arch, 'unknown')
 
 class TestNodeGenerator(unittest.TestCase):
 

@@ -122,7 +122,7 @@ class ResourceGenerator(SaltNodesCommandParser):
 
     # Define maps from grain values into expected strings
     _os_family_map = {'Linux': 'unix', 'Windows': 'windows'}
-    _os_arch_map = {'x86_64': 'amd64', 'x86': 'x86'}
+    _os_arch_map = {'x86_64': 'amd64'}
     _server_node_name = 'localhost'
 
     def __init__(self, args=None):
@@ -151,8 +151,8 @@ class ResourceGenerator(SaltNodesCommandParser):
                 'username':    self.options.server_node_user,
                 'osName':      local_grains['kernel'],
                 'osVersion':   local_grains['kernelrelease'],
-                'osFamily':    self._os_family_map[local_grains['kernel']],
-                'osArch':      self._os_arch_map[local_grains['osarch']]
+                'osFamily':    self._os_family(local_grains['kernel']),
+                'osArch':      self._os_arch(local_grains['osarch'])
             }
             # Create additional attributes from grains
             resources[self._server_node_name].update(
@@ -169,8 +169,8 @@ class ResourceGenerator(SaltNodesCommandParser):
                 'hostname':   minion_grains['fqdn'],
                 'osName':     minion_grains['kernel'],
                 'osVersion':  minion_grains['kernelrelease'],
-                'osFamily':   self._os_family_map[minion_grains['kernel']],
-                'osArch':     self._os_arch_map[minion_grains['osarch']]
+                'osFamily':   self._os_family(minion_grains['kernel']),
+                'osArch':     self._os_arch(minion_grains['osarch'])
             }
             # Create additional attributes from grains
             resources[minion].update(
@@ -239,6 +239,21 @@ class ResourceGenerator(SaltNodesCommandParser):
         else:
             tags.add(value)
         return tags
+
+    @classmethod
+    def _os_family(self, value):
+        if value in self._os_family_map:
+            return self._os_family_map[value]
+        else:
+            return value
+
+    @classmethod
+    def _os_arch(self, value):
+        if value in self._os_arch_map:
+            return self._os_arch_map[value]
+        else:
+            return value
+
 
 if __name__ == '__main__':
     # Print dict as YAML on stdout
