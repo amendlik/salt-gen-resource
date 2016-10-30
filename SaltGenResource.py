@@ -191,7 +191,7 @@ class ResourceGenerator(SaltNodesCommandParser):
             except TypeError:
                 log.warning('Minion \'{0}\' grain \'{1}\' ignored '
                             'because it contains nested items.'
-                            .format(minion, grain))
+                            .format(minion, item))
         return attributes
 
     def _attribute_from_grain(self, item, grains):
