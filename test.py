@@ -123,4 +123,5 @@ class TestServerNodeGenerator(TestNodeGenerator):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    runner = unittest.TextTestRunner(stream=sys.stdout, verbosity=2)
+    unittest.main(testRunner=runner, buffer=True)
