@@ -17,8 +17,8 @@ class SaltNodesCommandParser(
         six.with_metaclass(
             salt.utils.parsers.OptionParserMeta,
             salt.utils.parsers.OptionParser,
-            salt.utils.parsers.ExtendedTargetOptionsMixIn,
             salt.utils.parsers.ConfigDirMixIn,
+            salt.utils.parsers.ExtendedTargetOptionsMixIn,
             salt.utils.parsers.LogLevelMixIn)):
     usage = '%prog [options] \'<target>\''
     description = 'Salt Mine node source for Rundeck.'
@@ -30,7 +30,6 @@ class SaltNodesCommandParser(
     _setup_mp_logging_listener_ = False
     _default_logging_level_ = 'warning'
     config = {'extension_modules': '',
-              'log_level': _default_logging_level_,
               'log_granular_levels': {},
               'cython_enable': False}
 
@@ -100,6 +99,11 @@ class SaltNodesCommandParser(
         except IndexError:
             self.exit(42, ('\nCannot execute command without '
                            'defining a target.\n\n'))
+
+        if self.options.log_level:
+            self.config['log_level'] = self.options.log_level
+        else:
+            self.config['log_level'] = self._default_logging_level_
 
         # Set default targeting option
         if self.config['selected_target_option'] is None:
