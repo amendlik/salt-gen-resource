@@ -2,7 +2,7 @@
 
 A script that uses Mine function of SaltStack to populate nodes
 in Rundeck. In addition to providing nodes, any Salt Grain can be
-added as a node attribute.
+added as a node attribute or tag.
 
 You must have a Salt Minion running on the Rundeck server.
 
@@ -10,37 +10,38 @@ You must have a Salt Minion running on the Rundeck server.
 
 ### Resource Model Provider Script
 
-The only file required from this repository is [salt-gen-resource.py](salt-gen-resource.py). Copy it to your Rundeck server, in the location where your keep your Rundeck configuration scripts (e.g. `/opt/rundeck/scripts`). You can also clone this entire repository to your scripts location to make future updates easy.
+The only file required from this repository is [SaltGenResource.py](SaltGenResource.py). Copy it to your Rundeck server, in the location where your keep your Rundeck configuration scripts (e.g. `/opt/rundeck/scripts`). You can also clone this entire repository to your scripts location to make future updates easy.
 
 ### Sudo policy
 
 Because the script is essentially running the Salt Minion, it must be run as root. Add this to your sudoers policy to permit Rundeck to run it:
 ```
-Cmnd_Alias SALT_GEN_RESOURCE = /opt/rundeck/scripts/salt-gen-resource/salt-gen-resource.py
+Cmnd_Alias SALT_GEN_RESOURCE = /opt/rundeck/scripts/salt-gen-resource/SaltGenResource.py
 rundeck ALL=(root) NOPASSWD: SALT_GEN_RESOURCE
 Defaults!SALT_GEN_RESOURCE !requiretty
 ```
 
 ### Project configuration
 
-The project configuration can be edited through the web UI, or by editing the file on disk. I recommend using the UI for several reasons:
+The project configuration can be edited through the web UI, or by editing the file on disk. The web UI is recommended for several reasons:
 
-1. The UI works whether you are using filesystem-backed projects or database-backed projects. If you are using database-backed projects, there is no file on disk to edit.
-2. The UI knows the location of the file. Rundeck can be installed in a variety of configurations, and all of them place configuration files in different places.
-3. The UI handles string escaping. If you insist on editing the file directly, you must follow the escaping rules of Java .props files.
+1. It works whether you are using filesystem-backed projects or database-backed projects. If you are using database-backed projects, there is no file on disk to edit.
+2. It knows the location of the file. Rundeck can be installed in a variety of configurations, and all of them place configuration files in different places.
+3. It handles string escaping. If you insist on editing the file directly, you must follow the escaping rules of Java `.properties` files.
 
-Edit your Rundeck project configuration to include a new node source script. Change the `file` parameter to match the location where you installed `salt-gen-resource.py`.
+Edit your Rundeck project configuration to include a new node source script. Change the `file` parameter to match the location where you installed `SaltGenResource.py`.
 ```
 resources.source.2.config.args=-G virtual:kvm
-resources.source.2.config.file=/opt/rundeck/scripts/salt-gen-resource.py
+resources.source.2.config.file=/opt/rundeck/scripts/SaltGenResource.py
 resources.source.2.config.format=resourceyaml
 resources.source.2.config.interpreter=sudo
 resources.source.2.type=script
 ```
-**Note:** Do not delete the existing node source in your configuration file. That file usually contains the 'server node', which is necessary for certiain Rundeck workflows. The server node is **not** implemented by `salt-gen-resource.py`. Instead, configure this script as an additional node source.
+**Note:** Be careful about deleting an existing node source from the configuration file. One of those sources usually provides the 'server node', which is necessary for certiain Rundeck workflows. The server node is **not** provided by `SaltGenResource.py` by default. 
+Add additional node sources as necessary, by using another number in the properties (resources.source._#_.config), or configure `SaltGenResource.py` to provide the server node with `--include-server-node`.
 
 ### Salt Mine
-This resource model provider depends on the Salt Mine having access to the `grains.items` function on all minions. To enable this, the `mine_functions` options need to be applied to all Minions, either through the Minion configuration files, or using Pillar. The simplist `mine_functions` that would work is this:
+This resource model provider depends on the Salt Mine having access to the `grains.items` function on all minions. To enable this, the `mine_functions` options need to be applied to all Minions, either through the Minion configuration files, or using Pillar. The simplest `mine_functions` that would work is this:
 ```
 mine_functions:
   grains.items: []
@@ -57,9 +58,9 @@ See the [online documentation](https://docs.saltstack.com/en/latest/topics/mine/
 
 ## Configuration
 
-Running `salt-gen-resource.py --help` will tell you just about everything you need to know:
+Running `SaltGenResource.py --help` will tell you just about everything you need to know:
 ```
-Usage: salt-gen-resource.py [options] '<target>'
+Usage: SaltGenResource.py [options] '<target>'
 
 Salt Mine node source for Rundeck.
 
@@ -72,8 +73,9 @@ Options:
                         Default: '/etc/salt'.
   -m MINE_FUNCTION, --mine-function=MINE_FUNCTION
                         Set the function name for Salt Mine to execute to
-                        retrieve grains. Default value is grains.items but this
-                        could be different if mine function aliases are used.
+                        retrieve grains. Default value is grains.items but
+                        this could be different if mine function aliases are
+                        used.
   -s, --include-server-node
                         Include the Rundeck server node in the output. The
                         server node is required for some workflows and must be
@@ -155,7 +157,7 @@ The only required argument is a targeting expression. This has the effect of lim
 resources.source.2.config.args=*
 ```
 ### Node Attributes
-By default, this script will map these grains to Rundeck node attributes: `os`, `os_family`, `osrelease`, `osmajorrelease`, `saltversion`, `virtual`, and `manufacturer`. Use the `--grains`, `--add-grains`, and `--ignore-grains` options to gather different grains.
+Nod attributes can be added by including the `--attributes` argument. This can be used to add any grain value as a node attribute in Rundeck. Note that the value of the grain must be a single value (not a list or dictionary). Nested grains can be specified using `:` as a delimiter, such as `--attributes locale_info:defaultlanguage`.
 ### Node Tags
 Node tags can be added by including the `--tags` argument. This is particularly useful when the value of a grain is a list, because a tag will be created for each item in the list. A common example of this is a `roles` grain. Tags will also be created for single value grains. For example, `--tags=init` will tag every Linux system with `systemd`, `upstart`, etc.
 ### Mine function
@@ -187,7 +189,8 @@ app01:
   osmajorrelease: '7'
   osrelease: 7.2.1511
   saltversion: 2016.3.3
-  virtual: kvm
+  tags:
+    - kvm
 app02:
   hostname: app02.example.org
   manufacturer: OpenStack Foundation
@@ -200,7 +203,8 @@ app02:
   osmajorrelease: '7'
   osrelease: 7.2.1511
   saltversion: 2016.3.3
-  virtual: kvm
+  tags:
+    - kvm
 db01:
   hostname: db01.example.org
   manufacturer: OpenStack Foundation
@@ -213,7 +217,8 @@ db01:
   osmajorrelease: '7'
   osrelease: 7.2.1511
   saltversion: 2016.3.3
-  virtual: kvm
+  tags:
+    - kvm
 db02:
   hostname: db02.example.org
   manufacturer: OpenStack Foundation
@@ -226,7 +231,8 @@ db02:
   osmajorrelease: '7'
   osrelease: 7.2.1511
   saltversion: 2016.3.3
-  virtual: kvm
+  tags:
+    - kvm
 ```
 
 ## License
