@@ -114,8 +114,8 @@ class SaltNodesCommandParser(
             self.config['selected_target_option'] = 'glob'
 
         # Remove conflicting grains
-        self.config['attributes'] = [x for x in self.options.attributes
-                                     if x not in self.ignore_attributes]
+        self.options.attributes = [x for x in self.options.attributes
+                                   if x not in self.ignore_attributes]
 
     def setup_config(self):
         return config.minion_config(self.get_config_file_path(),
@@ -196,7 +196,7 @@ class ResourceGenerator(SaltNodesCommandParser):
 
     def _create_attributes(self, minion, grains):
         attributes = {}
-        for item in self.config['attributes']:
+        for item in self.options.attributes:
             try:
                 key, value = self._attribute_from_grain(item, grains)
                 attributes[key] = value
