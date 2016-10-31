@@ -199,6 +199,9 @@ class ResourceGenerator(SaltNodesCommandParser):
         for item in self.options.attributes:
             try:
                 key, value = self._attribute_from_grain(item, grains)
+                log.debug('Adding attribute for minion: \'{0}\' '
+                    'grain: \'{1}\', attribute: \'{2}\', value: \'{3}\''
+                    .format(minion, item, key, value))
                 attributes[key] = value
             except TypeError:
                 log.warning('Minion \'{0}\' grain \'{1}\' ignored '
@@ -221,7 +224,11 @@ class ResourceGenerator(SaltNodesCommandParser):
         tags = set()
         for item in self.options.tags:
             try:
-                map(tags.add, self._tags_from_grain(item, grains))
+                new_tags = self._tags_from_grain(item, grains)
+                log.debug('Adding tag for minion: \'{0}\' '
+                    'grain: \'{1}\', tag(s): \'{2}\''
+                    .format(minion, item, ','.join(str(x) for x in new_tags)))
+                map(tags.add, new_tags)
             except TypeError:
                 log.warning('Minion \'{0}\' grain \'{1}\' ignored '
                             'because it contains nested items.'
