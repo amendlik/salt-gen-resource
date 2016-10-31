@@ -6,9 +6,11 @@ import salt.grains
 import salt.utils.parsers
 import salt.ext.six as six
 import salt.syspaths as syspaths
+import salt.config as config
 import yaml
 import logging
 import os
+import sys
 
 log = logging.getLogger(__name__)
 
@@ -29,9 +31,6 @@ class SaltNodesCommandParser(
         syspaths.LOGS_DIR, 'salt-gen-resources.log')
     _setup_mp_logging_listener_ = False
     _default_logging_level_ = 'warning'
-    config = {'extension_modules': '',
-              'log_granular_levels': {},
-              'cython_enable': False}
 
     # Define list of attribute grains to ignore
     ignore_attributes = ['hostname', 'osName', 'osVersion',
@@ -86,6 +85,11 @@ class SaltNodesCommandParser(
         self.logging_options_group.remove_option('--log-file-level')
 
     def _mixin_after_parsed(self):
+
+        if not os.path.isfile(self.get_config_file_path()):
+            log.critical("Configuration file not found")
+            sys.exit(-1)
+
         # Extract targeting expression
         try:
             if self.options.list:
@@ -112,6 +116,10 @@ class SaltNodesCommandParser(
         # Remove conflicting grains
         self.config['attributes'] = [x for x in self.options.attributes
                                      if x not in self.ignore_attributes]
+
+    def setup_config(self):
+        return config.minion_config(self.get_config_file_path(),
+            cache_minion_id=True, ignore_config_errors=False)
 
     @staticmethod
     def list_callback(option, opt, value, parser):  # pylint: disable=unused-argument
