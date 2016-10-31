@@ -66,7 +66,7 @@ class SaltNodesCommandParser(
             type=str,
             default=[],
             action='callback',
-            callback=self.list_callback,
+            callback=self.set_callback,
             help=('Create Rundeck node attributes from the values of grains. '
                   'Multiple grains may be specified '
                   'when separated by a space or comma.')
@@ -76,7 +76,7 @@ class SaltNodesCommandParser(
             type=str,
             default=[],
             action='callback',
-            callback=self.list_callback,
+            callback=self.set_callback,
             help=('Create Rundeck node tags from the values of grains. '
                   'Multiple grains may be specified '
                   'when separated by a space or comma.')
@@ -122,12 +122,12 @@ class SaltNodesCommandParser(
             cache_minion_id=True, ignore_config_errors=False)
 
     @staticmethod
-    def list_callback(option, opt, value, parser):  # pylint: disable=unused-argument
+    def set_callback(option, opt, value, parser):  # pylint: disable=unused-argument
         if ',' in value:
             setattr(parser.values, option.dest,
-                    value.replace(' ', '').split(','))
+                    set(value.replace(' ', '').split(',')))
         else:
-            setattr(parser.values, option.dest, value.split())
+            setattr(parser.values, option.dest, set(value.split()))
 
 
 class ResourceGenerator(SaltNodesCommandParser):
