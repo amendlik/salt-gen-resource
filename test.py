@@ -84,7 +84,7 @@ class TestNodeGenerator(unittest.TestCase):
 
     def test_multiple_tags1(self):
         tags = ['os', 'os_family']
-        args = ['-t', ' '.join(tags), '*']
+        args = self._base_args + ['-t', ' '.join(tags), '*']
         resources = ResourceGenerator(args).run()
         self._test_attributes(resources, self.required_attributes)
         self._test_tags(resources, tags)
