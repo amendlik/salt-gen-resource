@@ -22,7 +22,7 @@ class SaltNodesCommandParser(
             salt.utils.parsers.ConfigDirMixIn,
             salt.utils.parsers.ExtendedTargetOptionsMixIn,
             salt.utils.parsers.LogLevelMixIn)):
-    usage = '%prog [options] \'<target>\''
+    usage = '%prog [options] <target> [<attr>=<value> ...]'
     description = 'Salt Mine node source for Rundeck.'
     epilog = None
 
