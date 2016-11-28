@@ -35,6 +35,7 @@ class SaltNodesCommandParser(
     # Define list of attribute grains to ignore
     ignore_attributes = ['hostname', 'osName', 'osVersion',
                          'osFamily', 'osArch', 'tags']
+    ignore_servernode = ['username', 'description']
 
     def _mixin_setup(self):
         self.add_option(
@@ -140,6 +141,7 @@ class ResourceGenerator(SaltNodesCommandParser):
     def __init__(self, args=None):
         super(SaltNodesCommandParser, self).__init__()
         self.parse_args(args)
+        self.static = salt.utils.args.parse_input(self.args, False)[1]
 
     def run(self):
         resources = {}
@@ -156,6 +158,7 @@ class ResourceGenerator(SaltNodesCommandParser):
 
         # Special handling for server node
         if self.options.include_server_node:
+            # Map required node attributes from grains
             local_grains = salt.loader.grains(caller.opts)
             resources[self._server_node_name] = {
                 'hostname':    self._server_node_name,
@@ -169,6 +172,10 @@ class ResourceGenerator(SaltNodesCommandParser):
             # Create additional attributes from grains
             resources[self._server_node_name].update(
                 self._create_attributes(self._server_node_name, local_grains))
+            # Create static attributes
+            resources[self._server_node_name].update(
+                {k: v for k, v in self.static.iteritems()
+                if k not in self.ignore_attributes + self.ignore_servernode})
             # Create tags from grains
             tags = self._create_tags(self._server_node_name, local_grains)
             if len(tags) > 0:
@@ -187,6 +194,10 @@ class ResourceGenerator(SaltNodesCommandParser):
             # Create additional attributes from grains
             resources[minion].update(
                 self._create_attributes(minion, minion_grains))
+            # Create static attributes
+            resources[minion].update(
+                {k: v for k, v in self.static.iteritems()
+                if k not in self.ignore_attributes})
             # Create tags from grains
             tags = self._create_tags(minion, minion_grains)
             if len(tags) > 0:

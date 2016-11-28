@@ -96,6 +96,12 @@ class TestNodeGenerator(unittest.TestCase):
         self._test_attributes(resources, self.required_attributes)
         self._test_tags(resources, tags)
 
+    def test_static_attributes(self):
+        args = self._base_args + ['*', 'username=root', 'password=\'pw\'']
+        resources = ResourceGenerator(args).run()
+        self._test_attributes(resources, self.required_attributes)
+        self._test_attributes(resources, ['username', 'password'])
+
     def _test_attributes(self, resources, needed):
         self.assertTrue(len(resources) > 0)
         for host, attributes in resources.iteritems():
@@ -120,7 +126,6 @@ class TestServerNodeGenerator(TestNodeGenerator):
         self.assertEqual(
             resources[ResourceGenerator._server_node_name]['hostname'],
             ResourceGenerator._server_node_name)
-
 
 if __name__ == '__main__':
     runner = unittest.TextTestRunner(stream=sys.stdout, verbosity=2)
