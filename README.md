@@ -60,7 +60,7 @@ See the [online documentation](https://docs.saltstack.com/en/latest/topics/mine/
 
 Running `SaltGenResource.py --help` will tell you just about everything you need to know:
 ```
-Usage: SaltGenResource.py [options] '<target>'
+Usage: SaltGenResource.py [options] <target> [<attr>=<value> ...]
 
 Salt Mine node source for Rundeck.
 
@@ -149,6 +149,7 @@ Options:
                         level data structures. Default: ':'.
 ```
 Command line options will be provided to Rundeck using the `resources.source.#.config.args` line in the project configuration. 
+
 ### Targeting
 The only required argument is a targeting expression. This has the effect of limiting which Salt Minions are presented as Rundeck nodes. This script supports the [same targeting methods and syntax](https://docs.saltstack.com/en/latest/topics/targeting/) as the `salt` command.
 
@@ -156,12 +157,22 @@ The only required argument is a targeting expression. This has the effect of lim
 ```
 resources.source.2.config.args=*
 ```
+
 ### Node Attributes
 Nod attributes can be added by including the `--attributes` argument. This can be used to add any grain value as a node attribute in Rundeck. Note that the value of the grain must be a single value (not a list or dictionary). Nested grains can be specified using `:` as a delimiter, such as `--attributes locale_info:defaultlanguage`.
+
 ### Node Tags
 Node tags can be added by including the `--tags` argument. This is particularly useful when the value of a grain is a list, because a tag will be created for each item in the list. A common example of this is a `roles` grain. Tags will also be created for single value grains. For example, `--tags=init` will tag every Linux system with `systemd`, `upstart`, etc.
-### Mine function
+
+### Mine Function
 By default, this script depends on Salt Mine having access to `grains.items` on every minion. If you have an alias in place for that function, specify it using the `--mine-function` option.
+
+### Static Attributes
+Additional attributes that are not provided by a grain can be specified by including key value pairs on the command line, after the targeting expression. These static attributes will be added to all generated node resources. For example:
+```
+SaltGenResource.py '*' username='rduser'
+```
+
 ### Example
 A more complete example might look like this:
 ```
@@ -174,7 +185,6 @@ resources.source.2.config.args=--mine-function allgrains --add-grains domain,sel
 5. Only create Rundeck nodes for those minions on the 10.0.1.0/24 subnet.
 
 ### Validation
-
 This script can be run at any time from a shell. This can be useful when testing command line arguments. The result should be a YAML document sent to stdout, formatted according the Rundeck [resource-yaml specification](http://rundeck.org/docs/man5/resource-yaml.html). For example:
 ```
 app01:
