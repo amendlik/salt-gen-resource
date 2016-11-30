@@ -159,7 +159,7 @@ resources.source.2.config.args=*
 ```
 
 ### Node Attributes
-Nod attributes can be added by including the `--attributes` argument. This can be used to add any grain value as a node attribute in Rundeck. Note that the value of the grain must be a single value (not a list or dictionary). Nested grains can be specified using `:` as a delimiter, such as `--attributes locale_info:defaultlanguage`.
+Node attributes can be added by including the `--attributes` argument. This can be used to add any grain value as a node attribute in Rundeck. Note that the value of the grain must be a single value (not a list or dictionary). Nested grains can be specified using `:` as a delimiter, such as `--attributes locale_info:defaultlanguage`.
 
 ### Node Tags
 Node tags can be added by including the `--tags` argument. This is particularly useful when the value of a grain is a list, because a tag will be created for each item in the list. A common example of this is a `roles` grain. Tags will also be created for single value grains. For example, `--tags=init` will tag every Linux system with `systemd`, `upstart`, etc.
@@ -176,13 +176,13 @@ SaltGenResource.py '*' username='rduser'
 ### Example
 A more complete example might look like this:
 ```
-resources.source.2.config.args=--mine-function allgrains --add-grains domain,selinux:enabled --ignore-grains manufacturer --tags roles,init -S 10.0.1.0/24
+resources.source.2.config.args=--mine-function allgrains --attributes domain,selinux:enabled --tags roles,init -S 10.0.1.0/24 username=rduser
 ```
 1. Use the mine function alias `allgrains` instead of `grains.items`.
 2. Create node attributes in Rundeck for grains `domain` and `selinux:enabled`.
-3. Do not create node attributes in Rundeck for the `manufacturer` grain.
-4. Create tags for every element of the `roles` grain, and a tag for the value of the `init` grain.
-5. Only create Rundeck nodes for those minions on the 10.0.1.0/24 subnet.
+3. Create tags for every element of the `roles` grain, and a tag for the value of the `init` grain.
+4. Only create Rundeck nodes for those minions on the 10.0.1.0/24 subnet.
+5. Add the `username` attribute to every node with a value of `rduser`.
 
 ### Validation
 This script can be run at any time from a shell. This can be useful when testing command line arguments. The result should be a YAML document sent to stdout, formatted according the Rundeck [resource-yaml specification](http://rundeck.org/docs/man5/resource-yaml.html). For example:
