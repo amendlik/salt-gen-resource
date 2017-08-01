@@ -153,7 +153,7 @@ class ResourceGenerator(SaltNodesCommandParser):
         mine = caller.cmd(
             'mine.get', self.config['tgt'],
             self.options.mine_function,
-            expr_form=self.config['selected_target_option'],
+            tgt_type=self.config['selected_target_option'],
             exclude_minion=self.options.include_server_node)
 
         # Special handling for server node
