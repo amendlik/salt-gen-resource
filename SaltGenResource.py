@@ -3,6 +3,7 @@
 import salt.client
 import salt.utils
 import salt.grains
+import salt.version
 import salt.utils.parsers
 import salt.ext.six as six
 import salt.syspaths as syspaths
@@ -146,15 +147,23 @@ class ResourceGenerator(SaltNodesCommandParser):
     def run(self):
         resources = {}
 
+        # Create a Salt Caller object
         caller = salt.client.Caller(
             os.path.join(self.options.config_dir, self._config_filename_))
 
+        # Account for an API change in Salt Nitrogen (2017.7)
+        kwargs = {'exclude_minion': self.options.include_server_node}
+        if salt.version.__saltstack_version__ >= salt.version.SaltStackVersion.from_name('Nitrogen'):
+            kwargs['tgt_type'] = self.config['selected_target_option']
+        else:
+            kwargs['expr_form'] = self.config['selected_target_option']
+
         # Call Salt Mine to retrieve grains for all nodes
         mine = caller.cmd(
-            'mine.get', self.config['tgt'],
+            'mine.get',
+            self.config['tgt'],
             self.options.mine_function,
-            expr_form=self.config['selected_target_option'],
-            exclude_minion=self.options.include_server_node)
+            **kwargs)
 
         # Special handling for server node
         if self.options.include_server_node:
