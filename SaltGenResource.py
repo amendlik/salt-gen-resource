@@ -159,7 +159,7 @@ class ResourceGenerator(SaltNodesCommandParser):
 
     # Define maps from grain values into expected strings
     _os_family_map = {'Linux': 'unix', 'Windows': 'windows'}
-    _os_arch_map = {'x86_64': 'amd64'}
+    _os_arch_map = {'x86_64': 'amd64', 'AMD64': 'amd64'}
     _server_node_name = 'localhost'
 
     def __init__(self, args=None):
@@ -204,7 +204,7 @@ class ResourceGenerator(SaltNodesCommandParser):
                 'osName':      local_grains['kernel'],
                 'osVersion':   local_grains['kernelrelease'],
                 'osFamily':    self._os_family(local_grains['kernel']),
-                'osArch':      self._os_arch(local_grains['osarch'])
+                'osArch':      self._os_arch(local_grains['cpuarch'])
             }
             # Create additional attributes from grains
             resources[self._server_node_name].update(
@@ -228,7 +228,7 @@ class ResourceGenerator(SaltNodesCommandParser):
                 'osName':     minion_grains['kernel'],
                 'osVersion':  minion_grains['kernelrelease'],
                 'osFamily':   self._os_family(minion_grains['kernel']),
-                'osArch':     self._os_arch(minion_grains['osarch'])
+                'osArch':     self._os_arch(minion_grains['cpuarch'])
             }
             # Create additional attributes from grains
             resources[minion].update(
