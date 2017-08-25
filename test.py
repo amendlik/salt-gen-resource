@@ -235,6 +235,8 @@ class MockParser:
     def parse_args(self, *args, **kwargs):
         return self.options, self.args
 
+    def setup_logfile_logger(self):
+        pass
 
 class MockMinion:
 
