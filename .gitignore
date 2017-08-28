@@ -1,3 +1,4 @@
 *.pyc
 .vagrant/
 __pycache__/
+.idea
