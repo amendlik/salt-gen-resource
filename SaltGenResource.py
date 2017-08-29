@@ -8,6 +8,7 @@ import salt.utils.parsers
 import salt.ext.six as six
 import salt.syspaths as syspaths
 import salt.config as config
+import salt.utils.args as saltargs
 import yaml
 import logging
 import os
@@ -325,22 +326,22 @@ class ResourceGenerator:
         return tags
 
     @classmethod
-    def _os_family(self, value):
+    def _os_family(cls, value):
         '''
         Map the os_family used by Salt to one used by Rundeck
         '''
-        if value in self._os_family_map:
-            return self._os_family_map[value]
+        if value in cls._os_family_map:
+            return cls._os_family_map[value]
         else:
             return value
 
     @classmethod
-    def _os_arch(self, value):
+    def _os_arch(cls, value):
         '''
         Map the os_arch used by Salt to one used by Rundeck
         '''
-        if value in self._os_arch_map:
-            return self._os_arch_map[value]
+        if value in cls._os_arch_map:
+            return cls._os_arch_map[value]
         else:
             return value
 
