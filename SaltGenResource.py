@@ -167,14 +167,15 @@ class ResourceGenerator:
         Parse command arguments
         '''
         parser = SaltNodesCommandParser()
-        parser.parse_args(args)
+        self.options, self.args = parser.parse_args(args)
 
-        parser.config.pop('conf_file', None)
-        self.options = parser.options
+        # Retrieve the minion configuration from the parser
         self.config = parser.config
+        # Removing 'conf_file' prevents the file from being re-read when rendering grains
+        self.config.pop('conf_file', None)
 
         # Parse the static attribute definitions
-        self.static = saltargs.parse_input(parser.args, False)[1]
+        self.static = saltargs.parse_input(self.args, False)[1]
 
     def run(self):
         resources = {}

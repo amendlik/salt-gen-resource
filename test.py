@@ -59,6 +59,7 @@ class TestNodeGenerator(unittest.TestCase):
 
                 caller.return_value.cmd.return_value = self.mine
                 caller.return_value.opts.return_value = parser.config
+                parser.options.attributes = ['os']
 
                 resources = ResourceGenerator().run()
                 self._test_required_attributes(resources)
@@ -212,7 +213,7 @@ class MockParser:
         self.args = ''
 
     def parse_args(self, *args, **kwargs):
-        pass
+        return self.options, self.args
 
 '''
 @unittest.skip("skipping")
