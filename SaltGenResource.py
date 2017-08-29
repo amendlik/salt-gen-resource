@@ -168,12 +168,13 @@ class ResourceGenerator:
         '''
         parser = SaltNodesCommandParser()
         parser.parse_args(args)
-        parser.config.pop('conf_file')
+
+        parser.config.pop('conf_file', None)
         self.options = parser.options
         self.config = parser.config
 
         # Parse the static attribute definitions
-        self.static = salt.utils.args.parse_input(parser.args, False)[1]
+        self.static = saltargs.parse_input(parser.args, False)[1]
 
     def run(self):
         resources = {}
@@ -196,7 +197,7 @@ class ResourceGenerator:
             **kwargs)
 
         # Special handling for server node
-        if self.options.include_server_node:
+        if self.options.include_server_node is True:
             # Map required node attributes from grains
             local_grains = caller.sminion.opts['grains']
             resources[self._server_node_name] = {
