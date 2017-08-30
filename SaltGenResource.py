@@ -307,7 +307,7 @@ class ResourceGenerator(SaltNodesCommandParser):
             pass
         elif isinstance(value, unicode):
             tags.add(value.encode('utf-8'))
-        elif isinstance(value, basestring):
+        elif isinstance(value, str):
             tags.add(value)
         elif isinstance(value, dict):
             raise TypeError
