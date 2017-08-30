@@ -17,6 +17,7 @@ import sys
 log = logging.getLogger(__name__)
 
 
+# noinspection PyClassHasNoInit
 class SaltNodesCommandParser(
         six.with_metaclass(
             salt.utils.parsers.OptionParserMeta,
@@ -136,6 +137,7 @@ class SaltNodesCommandParser(
             cache_minion_id=True,
             ignore_config_errors=False)
 
+    # noinspection PyUnusedLocal
     @staticmethod
     def set_callback(option, opt, value, parser):  # pylint: disable=unused-argument
         '''
