@@ -31,69 +31,89 @@ class TestMapping(unittest.TestCase):
 
 class TestNodeGenerator(unittest.TestCase):
 
-    _base_args = ['-l', 'quiet']
+    include_server_node = False
     required_attributes = ['hostname', 'osArch', 'osFamily',
                            'osName', 'osVersion']
+    default_args = ['mine.get', '*', 'grains.items']
+    default_kwargs = {'tgt_type': 'glob'}
+
+    @classmethod
+    def setUpClass(cls):
+
+        # Load mine return data
+        with open("test_mine.yaml", 'r') as stream:
+            try:
+                cls.mine = yaml.load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+
+        # Load grains for server node
+        with open("test_config.yaml", 'r') as stream:
+            try:
+                cls.server_grains = yaml.load(stream)['grains']
+            except yaml.YAMLError as exc:
+                print(exc)
 
     def test_single_attribute(self):
         with patch('SaltGenResource.SaltNodesCommandParser', MockParser()) as parser:
-            with patch('salt.client.Caller', MockCaller()):
+            with patch('salt.client.Caller', MockCaller()) as caller:
+
+                call_kwargs = dict.copy(self.default_kwargs)
+                parser.options.include_server_node = self.include_server_node
+                call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.options.attributes = ['os']
-
                 resources = ResourceGenerator().run()
+
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, parser.options.attributes)
+                caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
 
-    def test_multiple_attributes1(self):
+    def test_multiple_attributes(self):
         with patch('SaltGenResource.SaltNodesCommandParser', MockParser()) as parser:
-            with patch('salt.client.Caller', MockCaller()):
+            with patch('salt.client.Caller', MockCaller()) as caller:
+
+                call_kwargs = dict.copy(self.default_kwargs)
+                parser.options.include_server_node = self.include_server_node
+                call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.options.attributes = ['os', 'os_family']
-                parser.options.include_server_node = True
-
                 resources = ResourceGenerator().run()
+
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, parser.options.attributes)
+                caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
+
+    def test_single_tag(self):
+        with patch('SaltGenResource.SaltNodesCommandParser', MockParser()) as parser:
+            with patch('salt.client.Caller', MockCaller()) as caller:
+                call_kwargs = dict.copy(self.default_kwargs)
+                parser.options.include_server_node = self.include_server_node
+                call_kwargs['exclude_minion'] = self.include_server_node
+
+                parser.options.tags = ['os']
+                resources = ResourceGenerator().run()
+
+                self._test_required_attributes(resources)
+                self._test_tags(resources, parser.options.tags)
+                caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
+
+    def test_multiple_tags(self):
+        with patch('SaltGenResource.SaltNodesCommandParser', MockParser()) as parser:
+            with patch('salt.client.Caller', MockCaller()) as caller:
+                call_kwargs = dict.copy(self.default_kwargs)
+                parser.options.include_server_node = self.include_server_node
+                call_kwargs['exclude_minion'] = self.include_server_node
+
+                parser.options.tags = ['os', 'kernelrelease']
+                resources = ResourceGenerator().run()
+
+                self._test_required_attributes(resources)
+                self._test_tags(resources, parser.options.tags)
+                caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
 
     @unittest.skip("temporary")
-    def test_multiple_attributes2(self, caller):
-        caller.return_value.cmd.return_value = self.mine
-        optional_attributes = ['os', 'os_family']
-        args = self._base_args + ['-a', ','.join(optional_attributes), '*']
-        resources = ResourceGenerator(args).run()
-        self._test_required_attributes(resources)
-        #self._test_attributes(resources, optional_attributes)
-
-    @unittest.skip("temporary")
-    def test_single_tag(self, caller):
-        caller.return_value.cmd.return_value = self.mine
-        tags = ['os']
-        args = self._base_args + ['-t', tags[0], '*']
-        resources = ResourceGenerator(args).run()
-        self._test_required_attributes(resources)
-        #self._test_tags(resources, tags)
-
-    @unittest.skip("temporary")
-    def test_multiple_tags1(self, caller):
-        caller.return_value.cmd.return_value = self.mine
-        tags = ['os', 'os_family']
-        args = self._base_args + ['-t', ' '.join(tags), '*']
-        resources = ResourceGenerator(args).run()
-        self._test_required_attributes(resources)
-        #self._test_tags(resources, tags)
-
-    @unittest.skip("temporary")
-    def test_multiple_tags1(self, caller):
-        caller.return_value.cmd.return_value = self.mine
-        tags = ['os', 'os_family']
-        args = self._base_args + ['-t', ','.join(tags), '*']
-        resources = ResourceGenerator(args).run()
-        self._test_required_attributes(resources)
-        #self._test_tags(resources, tags)
-
-    @unittest.skip("temporary")
-    def test_static_attributes(self, caller):
+    def test_static_attributes(self):
         caller.return_value.cmd.return_value = self.mine
         args = self._base_args + ['*', 'username=root', 'password=\'pw\'']
         resources = ResourceGenerator(args).run()
@@ -108,24 +128,29 @@ class TestNodeGenerator(unittest.TestCase):
                 self.assertIsNotNone(attributes[attribute])
                 self.assertNotEqual(attributes[attribute], '')
 
-            '''
-            self.assertIn(host, resources)
-            self.assertEqual(
-                resources[host]['hostname'],
-                self.mine[host]['fqdn'])
+            if host == ResourceGenerator._server_node_name:
+                expected = self.server_grains
+                self.assertIn(host, resources)
+                self.assertEqual(resources[host]['hostname'], host)
+            else:
+                expected = self.mine[host]
+                self.assertIn(host, resources)
+                self.assertEqual(
+                    resources[host]['hostname'],
+                    expected['fqdn'])
+
             self.assertEqual(
                 resources[host]['osArch'],
-                ResourceGenerator._os_arch(self.mine[host]['cpuarch']))
+                ResourceGenerator._os_arch(expected['cpuarch']))
             self.assertEqual(
                 resources[host]['osFamily'],
-                ResourceGenerator._os_family(self.mine[host]['kernel']))
+                ResourceGenerator._os_family(expected['kernel']))
             self.assertEqual(
                 resources[host]['osName'],
-                self.mine[host]['kernel'])
+                expected['kernel'])
             self.assertEqual(
                 resources[host]['osVersion'],
-                self.mine[host]['kernelrelease'])
-            '''
+                expected['kernelrelease'])
 
     def _test_attributes(self, resources, needed):
         self.assertTrue(len(resources) > 0)
@@ -140,7 +165,7 @@ class TestNodeGenerator(unittest.TestCase):
         for host, attributes in resources.iteritems():
             self.assertIn('tags', attributes)
             self.assertIsNotNone(attributes['tags'])
-            self.assertTrue(len(attributes['tags']) >= len(needed))
+            self.assertEqual(len(attributes['tags']), len(needed))
 
 '''
 class TestNodeTargeting(unittest.TestCase):
@@ -212,13 +237,13 @@ class MockMinion:
 
 class MockCaller:
 
-    cmd = Mock()
-
     def __call__(self, *args, **kwargs):
         return self
 
     def __init__(self):
         self.sminion = MockMinion()
+        self.cmd = Mock()
+
         with open("test_mine.yaml", 'r') as stream:
             try:
                 self.cmd.return_value = yaml.load(stream)
@@ -226,23 +251,14 @@ class MockCaller:
                 print(exc)
 
 
-'''
-@unittest.skip("skipping")
 class TestServerNodeGenerator(TestNodeGenerator):
-    _base_args = TestNodeGenerator._base_args + ['--include-server-node']
-
-    def _test_attributes(self, resources, needed):
-        super(TestServerNodeGenerator, self)._test_attributes(resources, needed)
-        self.assertIn(ResourceGenerator._server_node_name, resources)
-        self.assertEqual(
-            resources[ResourceGenerator._server_node_name]['hostname'],
-            ResourceGenerator._server_node_name)
-'''
+    include_server_node = True
 
 
 def unit_tests():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestNodeGenerator))
+    suite.addTest(unittest.makeSuite(TestServerNodeGenerator))
     suite.addTest(unittest.makeSuite(TestMapping))
     return suite
 
