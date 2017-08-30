@@ -290,24 +290,6 @@ class TestServerNodeGenerator(TestNodeGenerator):
     include_server_node = True
 
 
-def unit_tests():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TestNodeGenerator))
-    suite.addTest(unittest.makeSuite(TestServerNodeGenerator))
-    suite.addTest(unittest.makeSuite(TestMapping))
-    return suite
-
-
-# def integration_tests():
-#     suite = unittest.TestSuite()
-#     suite.addTest(unittest.makeSuite(TestNodeTargeting))
-#     return suite
-
-
 if __name__ == '__main__':
     runner = unittest.TextTestRunner(stream=sys.stdout, verbosity=2)
-
-    result = runner.run(unit_tests())
-    #runner.run(integration_tests())
-
-    sys.exit(not result.wasSuccessful())
+    unittest.main(testRunner=runner, buffer=True)
