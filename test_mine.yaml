@@ -1,0 +1,14 @@
+linmin:
+  cpuarch: x86_64
+  fqdn: minion1.example.com
+  kernel: Linux
+  kernelrelease: 4.4.0-75-generic
+  os: RedHat
+  os_family: RedHat
+winmin:
+  cpuarch: AMD64
+  fqdn: minion2.example.com
+  kernel: Windows
+  kernelrelease: 6.3.9600
+  os: Windows
+  os_family: Windows

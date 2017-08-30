@@ -8,6 +8,7 @@ import salt.utils.parsers
 import salt.ext.six as six
 import salt.syspaths as syspaths
 import salt.config as config
+import salt.utils.args as saltargs
 import yaml
 import logging
 import os
@@ -16,6 +17,7 @@ import sys
 log = logging.getLogger(__name__)
 
 
+# noinspection PyClassHasNoInit
 class SaltNodesCommandParser(
         six.with_metaclass(
             salt.utils.parsers.OptionParserMeta,
@@ -39,8 +41,7 @@ class SaltNodesCommandParser(
     _default_logging_level_ = 'warning'
 
     # Ignore requests to provide reserved attribute names
-    ignore_attributes = ['hostname', 'osName', 'osVersion',
-                         'osFamily', 'osArch', 'tags']
+    ignore_attributes = ['hostname', 'osName', 'osVersion', 'osFamily', 'osArch', 'tags']
     ignore_servernode = ['username', 'description']
 
     def _mixin_setup(self):
@@ -136,6 +137,7 @@ class SaltNodesCommandParser(
             cache_minion_id=True,
             ignore_config_errors=False)
 
+    # noinspection PyUnusedLocal
     @staticmethod
     def set_callback(option, opt, value, parser):  # pylint: disable=unused-argument
         '''
@@ -150,7 +152,7 @@ class SaltNodesCommandParser(
             setattr(parser.values, option.dest, set(value.split()))
 
 
-class ResourceGenerator(SaltNodesCommandParser):
+class ResourceGenerator:
     '''
     Provide a dictionary of node definitions.
     When written to stdout in YAML format, this dictionary is consumable
@@ -166,18 +168,22 @@ class ResourceGenerator(SaltNodesCommandParser):
         '''
         Parse command arguments
         '''
-        super(SaltNodesCommandParser, self).__init__()
-        self.parse_args(args)
+        parser = SaltNodesCommandParser()
+        self.options, self.args = parser.parse_args(args)
+
+        # Retrieve the minion configuration from the parser
+        self.config = parser.config
+        # Removing 'conf_file' prevents the file from being re-read when rendering grains
+        self.config.pop('conf_file', None)
 
         # Parse the static attribute definitions
-        self.static = salt.utils.args.parse_input(self.args, False)[1]
+        self.static = saltargs.parse_input(self.args, False)[1]
 
     def run(self):
         resources = {}
 
         # Create a Salt Caller object
-        caller = salt.client.Caller(
-            os.path.join(self.options.config_dir, self._config_filename_))
+        caller = salt.client.Caller(c_path=None, mopts=self.config)
 
         # Account for an API change in Salt Nitrogen (2017.7)
         kwargs = {'exclude_minion': self.options.include_server_node}
@@ -194,9 +200,9 @@ class ResourceGenerator(SaltNodesCommandParser):
             **kwargs)
 
         # Special handling for server node
-        if self.options.include_server_node:
+        if self.options.include_server_node is True:
             # Map required node attributes from grains
-            local_grains = salt.loader.grains(caller.opts)
+            local_grains = caller.sminion.opts['grains']
             resources[self._server_node_name] = {
                 'hostname':    self._server_node_name,
                 'description': 'Rundeck server node',
@@ -213,7 +219,7 @@ class ResourceGenerator(SaltNodesCommandParser):
             # Create static attributes
             resources[self._server_node_name].update({
                 k: v for k, v in self.static.iteritems()
-                if k not in self.ignore_attributes + self.ignore_servernode})
+                if k not in SaltNodesCommandParser.ignore_attributes + SaltNodesCommandParser.ignore_servernode})
 
             # Create tags from grains
             tags = self._create_tags(self._server_node_name, local_grains)
@@ -236,7 +242,7 @@ class ResourceGenerator(SaltNodesCommandParser):
             # Create static attributes
             resources[minion].update({
                 k: v for k, v in self.static.iteritems()
-                if k not in self.ignore_attributes})
+                if k not in SaltNodesCommandParser.ignore_attributes})
             # Create tags from grains
             tags = self._create_tags(minion, minion_grains)
             if len(tags) > 0:
@@ -275,7 +281,7 @@ class ResourceGenerator(SaltNodesCommandParser):
             value = value.encode('utf-8')
         elif hasattr(value, '__iter__'):
             raise TypeError
-        return (key, value)
+        return key, value
 
     def _create_tags(self, minion, grains):
         '''
@@ -324,22 +330,22 @@ class ResourceGenerator(SaltNodesCommandParser):
         return tags
 
     @classmethod
-    def _os_family(self, value):
+    def _os_family(cls, value):
         '''
         Map the os_family used by Salt to one used by Rundeck
         '''
-        if value in self._os_family_map:
-            return self._os_family_map[value]
+        if value in cls._os_family_map:
+            return cls._os_family_map[value]
         else:
             return value
 
     @classmethod
-    def _os_arch(self, value):
+    def _os_arch(cls, value):
         '''
         Map the os_arch used by Salt to one used by Rundeck
         '''
-        if value in self._os_arch_map:
-            return self._os_arch_map[value]
+        if value in cls._os_arch_map:
+            return cls._os_arch_map[value]
         else:
             return value
 

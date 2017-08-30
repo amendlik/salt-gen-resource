@@ -1,0 +1,6 @@
+attributes: []
+delimiter: ':'
+include_server_node: false
+mine_function: grains.items
+server_node_user: rundeck
+tags: []
