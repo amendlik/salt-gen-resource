@@ -1,12 +1,12 @@
 import sys
 import yaml
-import unittest
 import optparse
+from unittest import TestCase, TextTestRunner, main
 from SaltGenResource import ResourceGenerator, SaltNodesCommandParser
 from mock import patch, Mock
 
 
-class TestMapping(unittest.TestCase):
+class TestMapping(TestCase):
 
     def test_os_family_map1(self):
         os_family = ResourceGenerator._os_family('Linux')
@@ -29,7 +29,7 @@ class TestMapping(unittest.TestCase):
         self.assertEqual(os_arch, 'unknown')
 
 
-class TestNodeGenerator(unittest.TestCase):
+class TestNodeGenerator(TestCase):
 
     include_server_node = False
     required_attributes = ['hostname', 'osArch', 'osFamily',
@@ -199,38 +199,13 @@ class TestNodeGenerator(unittest.TestCase):
             self.assertIsNotNone(attributes['tags'])
             self.assertEqual(len(attributes['tags']), len(needed))
 
-'''
-class TestNodeTargeting(unittest.TestCase):
 
-    _base_args = ['-l', 'quiet']
-    required_attributes = ['hostname', 'osArch', 'osFamily',
-                           'osName', 'osVersion']
-
-    def test_glob_targeting(self):
-        args = self._base_args + ['*']
-        resources = ResourceGenerator(args).run()
-        self._test_attributes(resources, self.required_attributes)
-
-    def test_cidr_targeting(self):
-        args = self._base_args + ['-S', '0.0.0.0/0']
-        resources = ResourceGenerator(args).run()
-        self._test_attributes(resources, self.required_attributes)
-
-    def test_grain_targeting(self):
-        args = self._base_args + ['-G', 'os:*']
-        resources = ResourceGenerator(args).run()
-        self._test_attributes(resources, self.required_attributes)
-
-    def test_pcre_targeting(self):
-        args = self._base_args + ['-E', '.*']
-        resources = ResourceGenerator(args).run()
-        self._test_attributes(resources, self.required_attributes)
-
-    def test_grain_pcre_targeting(self):
-        args = self._base_args + ['-P', 'os:.*']
-        resources = ResourceGenerator(args).run()
-        self._test_attributes(resources, self.required_attributes)
-'''
+class TestServerNodeGenerator(TestNodeGenerator):
+    '''
+    This test case runs all the same tests as TestNodeGenerator,
+    but as if the --include-server-node option was passed.
+    '''
+    include_server_node = True
 
 
 class MockParser:
@@ -256,6 +231,7 @@ class MockParser:
 
         self.args = ''
 
+    # noinspection PyUnusedLocal
     def parse_args(self, *args, **kwargs):
         return self.options, self.args
 
@@ -286,10 +262,6 @@ class MockCaller:
                 print(exc)
 
 
-class TestServerNodeGenerator(TestNodeGenerator):
-    include_server_node = True
-
-
 if __name__ == '__main__':
-    runner = unittest.TextTestRunner(stream=sys.stdout, verbosity=2)
-    unittest.main(testRunner=runner, buffer=True)
+    runner = TextTestRunner(stream=sys.stdout, verbosity=2)
+    main(testRunner=runner, buffer=True)
