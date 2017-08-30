@@ -2,8 +2,8 @@ import sys
 import yaml
 import unittest
 import optparse
-from SaltGenResource import ResourceGenerator
-from mock import patch, MagicMock, Mock
+from SaltGenResource import ResourceGenerator, SaltNodesCommandParser
+from mock import patch, Mock
 
 
 class TestMapping(unittest.TestCase):
@@ -112,13 +112,45 @@ class TestNodeGenerator(unittest.TestCase):
                 self._test_tags(resources, parser.options.tags)
                 caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
 
-    @unittest.skip("temporary")
     def test_static_attributes(self):
-        caller.return_value.cmd.return_value = self.mine
-        args = self._base_args + ['*', 'username=root', 'password=\'pw\'']
-        resources = ResourceGenerator(args).run()
-        self._test_required_attributes(resources)
-        #self._test_attributes(resources, ['username', 'password'])
+        with patch('SaltGenResource.SaltNodesCommandParser', MockParser()) as parser:
+            with patch('salt.client.Caller', MockCaller()) as caller:
+                call_kwargs = dict.copy(self.default_kwargs)
+                parser.options.include_server_node = self.include_server_node
+                call_kwargs['exclude_minion'] = self.include_server_node
+
+                parser.args = ['color=yellow', 'pattern=\'polka dot\'']
+                resources = ResourceGenerator().run()
+
+                self._test_required_attributes(resources)
+                self._test_attributes(resources, ['color', 'pattern'])
+
+                for host, attributes in resources.iteritems():
+                    self.assertEqual(resources[host]['color'], 'yellow')
+                    self.assertEqual(resources[host]['pattern'], 'polka dot')
+
+                caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
+
+    def test_static_username(self):
+        with patch('SaltGenResource.SaltNodesCommandParser', MockParser()) as parser:
+            with patch('salt.client.Caller', MockCaller()) as caller:
+                call_kwargs = dict.copy(self.default_kwargs)
+                parser.options.include_server_node = self.include_server_node
+                call_kwargs['exclude_minion'] = self.include_server_node
+
+                parser.args = ['username=root']
+                resources = ResourceGenerator().run()
+
+                self._test_required_attributes(resources)
+                self._test_attributes(resources, ['username'])
+
+                for host, attributes in resources.iteritems():
+                    if host == ResourceGenerator._server_node_name:
+                        self.assertEqual(resources[host]['username'], parser.options.server_node_user)
+                    else:
+                        self.assertEqual(resources[host]['username'], 'root')
+
+                caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
 
     def _test_required_attributes(self, resources):
         self.assertTrue(len(resources) > 0)
@@ -202,6 +234,9 @@ class TestNodeTargeting(unittest.TestCase):
 
 
 class MockParser:
+
+    ignore_attributes = SaltNodesCommandParser.ignore_attributes
+    ignore_servernode = SaltNodesCommandParser.ignore_servernode
 
     def __call__(self, *args, **kwargs):
         return self
