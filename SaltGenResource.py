@@ -206,6 +206,14 @@ class ResourceGenerator(object):
         self.options = parser.options
 
     def run(self):
+        '''
+        The main entry point for SaltGenResource. This method calls the Salt Mine
+        and converts the returned data into a dictionary that conforms to the Rundeck
+        specification for an external resource generator.
+
+        The return is a Python dictionary. The caller is responsible for converting
+        the dictionary into YAML for consumption by Rundeck.
+        '''
         resources = {}
 
         # Create a Salt Caller object
