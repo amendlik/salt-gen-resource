@@ -48,8 +48,8 @@ class TestNodeGenerator(TestCase):
         else:
             cls.default_kwargs = {'expr_form': 'glob'}
 
-        cls.mine = load_test_data('test_mine.yaml')
-        cls.server_grains = load_test_data('test_config.yaml')['grains']
+        cls.mine = load_test_data('mine.yaml')
+        cls.server_grains = load_test_data('config.yaml')['grains']
 
     def test_single_attribute(self):
         with patch('SaltGenResource.SaltNodesCommandParser', MockParser()) as parser:
@@ -215,8 +215,8 @@ class MockParser:
 
     def __init__(self):
 
-        self.config = load_test_data('test_config.yaml')
-        self.options = optparse.Values(load_test_data('test_options.yaml'))
+        self.config = load_test_data('config.yaml')
+        self.options = optparse.Values(load_test_data('options.yaml'))
         self.args = ''
 
     # noinspection PyUnusedLocal
@@ -230,7 +230,7 @@ class MockParser:
 class MockMinion:
 
     def __init__(self):
-        self.opts = load_test_data('test_config.yaml')
+        self.opts = load_test_data('config.yaml')
 
 
 class MockCaller:
@@ -240,7 +240,7 @@ class MockCaller:
 
     def __init__(self):
         self.sminion = MockMinion()
-        self.cmd = Mock(return_value=load_test_data('test_mine.yaml'))
+        self.cmd = Mock(return_value=load_test_data('mine.yaml'))
 
 
 def load_test_data(dataset):
