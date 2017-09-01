@@ -3,7 +3,7 @@
 import salt.client
 import salt.utils
 import salt.grains
-import salt.version
+import salt.version as version
 import salt.utils.parsers
 import salt.ext.six as six
 import salt.syspaths as syspaths
@@ -222,7 +222,7 @@ class ResourceGenerator(object):
 
         # Account for an API change in Salt Nitrogen (2017.7)
         kwargs = {'exclude_minion': self.options.include_server_node}
-        if salt.version.__saltstack_version__ >= salt.version.SaltStackVersion.from_name('Nitrogen'):
+        if version.__saltstack_version__ >= version.SaltStackVersion.from_name('Nitrogen'):
             kwargs['tgt_type'] = self.config['selected_target_option']
         else:
             kwargs['expr_form'] = self.config['selected_target_option']
