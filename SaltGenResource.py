@@ -14,7 +14,7 @@ import logging
 import os
 import sys
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('salt-gen-resource')
 
 
 # noinspection PyClassHasNoInit
@@ -35,8 +35,9 @@ class SaltNodesCommandParser(
     epilog = None
 
     _config_filename_ = 'minion'
-    _default_logging_logfile_ = os.path.join(
-        syspaths.LOGS_DIR, 'salt-gen-resources.log')
+    _logfile_config_setting_name_ = 'resource_generator_logfile'
+    _logfile_loglevel_config_setting_name_ = 'resource_generator_log_level_logfile'
+    _default_logging_logfile_ = os.path.join(syspaths.LOGS_DIR, 'resource-generator')
     _setup_mp_logging_listener_ = False
     _default_logging_level_ = 'warning'
 
@@ -93,8 +94,6 @@ class SaltNodesCommandParser(
                   'Multiple grains may be specified '
                   'when separated by a space or comma.')
         )
-        self.logging_options_group.remove_option('--log-file')
-        self.logging_options_group.remove_option('--log-file-level')
 
     def _mixin_after_parsed(self):
         '''
@@ -132,10 +131,31 @@ class SaltNodesCommandParser(
                                    if x not in self.ignore_attributes]
 
     def setup_config(self):
-        return config.minion_config(
+        config_opts = config.minion_config(
             self.get_config_file_path(),
             cache_minion_id=True,
             ignore_config_errors=False)
+
+        # Make file based logging work
+        if getattr(self.options, self._logfile_config_setting_name_, 'None') is None:
+
+            # Copy the default log file path into the config dict
+            if self._logfile_config_setting_name_ not in config_opts:
+                config_opts[self._logfile_config_setting_name_] = self._default_logging_logfile_
+
+            # Prepend the root_dir setting to the log file path
+            config.prepend_root_dir(config_opts, [self._logfile_config_setting_name_])
+
+            # Copy the altered path back to the options or it will revert to the default
+            setattr(self.options, self._logfile_config_setting_name_, config_opts[self._logfile_config_setting_name_])
+
+        else:
+            # Copy the provided log file path into the config dict
+            if self._logfile_config_setting_name_ not in config_opts:
+                config_opts[self._logfile_config_setting_name_] = \
+                    getattr(self.options, self._logfile_config_setting_name_, self._default_logging_logfile_)
+
+        return config_opts
 
     # noinspection PyUnusedLocal
     @staticmethod
@@ -152,7 +172,7 @@ class SaltNodesCommandParser(
             setattr(parser.values, option.dest, set(value.split()))
 
 
-class ResourceGenerator:
+class ResourceGenerator(object):
     '''
     Provide a dictionary of node definitions.
     When written to stdout in YAML format, this dictionary is consumable
@@ -168,18 +188,32 @@ class ResourceGenerator:
         '''
         Parse command arguments
         '''
+        # Call the configuration parser
         parser = SaltNodesCommandParser()
-        self.options, self.args = parser.parse_args(args)
+        parser.parse_args(args)
 
-        # Retrieve the minion configuration from the parser
-        self.config = parser.config
         # Removing 'conf_file' prevents the file from being re-read when rendering grains
-        self.config.pop('conf_file', None)
+        parser.config.pop('conf_file', None)
 
         # Parse the static attribute definitions
-        self.static = saltargs.parse_input(self.args, False)[1]
+        self.static = saltargs.parse_input(parser.args, False)[1]
+
+        # Setup file logging
+        parser.setup_logfile_logger()
+
+        # Create local references to the parser data
+        self.config = parser.config
+        self.options = parser.options
 
     def run(self):
+        '''
+        The main entry point for SaltGenResource. This method calls the Salt Mine
+        and converts the returned data into a dictionary that conforms to the Rundeck
+        specification for an external resource generator.
+
+        The return is a Python dictionary. The caller is responsible for converting
+        the dictionary into YAML for consumption by Rundeck.
+        '''
         resources = {}
 
         # Create a Salt Caller object

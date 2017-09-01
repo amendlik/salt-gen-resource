@@ -66,7 +66,8 @@ Salt Mine node source for Rundeck.
 
 Options:
   --version             show program's version number and exit
-  --versions-report     Show program's dependencies version number and exit.
+  -V, --versions-report
+                        Show program's dependencies version number and exit.
   -h, --help            show this help message and exit
   -c CONFIG_DIR, --config-dir=CONFIG_DIR
                         Pass in an alternative configuration directory.
@@ -99,6 +100,13 @@ Options:
 
     -l LOG_LEVEL, --log-level=LOG_LEVEL
                         Console logging log level. One of 'all', 'garbage',
+                        'trace', 'debug', 'profile', 'info', 'warning',
+                        'error', 'critical', 'quiet'. Default: 'warning'.
+    --log-file=RESOURCE_GENERATOR_LOGFILE
+                        Log file path. Default: '/var/log/salt/resource-
+                        generator'.
+    --log-file-level=RESOURCE_GENERATOR_LOG_LEVEL_LOGFILE
+                        Logfile logging log level. One of 'all', 'garbage',
                         'trace', 'debug', 'profile', 'info', 'warning',
                         'error', 'critical', 'quiet'. Default: 'warning'.
 
@@ -172,6 +180,15 @@ Additional attributes that are not provided by a grain can be specified by inclu
 ```
 SaltGenResource.py '*' username='rduser'
 ```
+
+### Configuration File
+SaltGenResource loads its configuration from the standard Minion configuration files, normally located at `/etc/salt/minion` and `/etc/salt/minion.d/*.conf` on Linux. This path is different on other operating systems, and can be overriden using the `-c` or `--config-dir` command-line options.
+In addition to the normal, [documented](https://docs.saltstack.com/en/latest/ref/configuration/minion.html) configuration, there are two additional options to control file-based logging:
+
+| Option | Default Value | Description |
+|--------|---------------|-------------|
+| `resource_generator_logfile` | `/var/log/salt/resource-generator` | Log file path. This path will be prepended with `root_dir` at runtime. |
+| `resource_generator_log_level_logfile` | `warning` | Logfile logging log level. One of `all`, `garbage`, `trace`, `debug`, `profile`, `info`, `warning`, `error`, `critical`, `quiet`. |
 
 ### Example
 A more complete example might look like this:
