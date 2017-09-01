@@ -183,6 +183,7 @@ class ResourceGenerator(object):
     _os_family_map = {'Linux': 'unix', 'Windows': 'windows'}
     _os_arch_map = {'x86_64': 'amd64', 'AMD64': 'amd64'}
     _server_node_name = 'localhost'
+    _mine_func = 'mine.get'
 
     def __init__(self, args=None):
         '''
@@ -227,11 +228,17 @@ class ResourceGenerator(object):
             kwargs['expr_form'] = self.config['selected_target_option']
 
         # Call Salt Mine to retrieve grains for all nodes
+        log.debug(
+            'Calling {0} with target: \'{1}\' type: \'{2}\''
+            .format(self._mine_func, self.config['tgt'], self.config['selected_target_option']))
         mine = caller.cmd(
-            'mine.get',
+            self._mine_func,
             self.config['tgt'],
             self.options.mine_function,
             **kwargs)
+        log.debug(
+            'Salt Mine function \'{0}\' returned {1} minion{2}'
+            .format(self._mine_func, len(mine), '' if len(mine) == 1 else 's'))
 
         # Special handling for server node
         if self.options.include_server_node is True:
@@ -282,6 +289,9 @@ class ResourceGenerator(object):
             if len(tags) > 0:
                 resources[minion]['tags'] = tags
 
+        if not resources:
+            log.warning('No resources returned.')
+
         return resources
 
     def _create_attributes(self, minion, grains):
@@ -292,11 +302,16 @@ class ResourceGenerator(object):
         for item in self.options.attributes:
             try:
                 key, value = self._attribute_from_grain(item, grains)
-                log.debug(
-                    'Adding attribute for minion: \'{0}\' '
-                    'grain: \'{1}\', attribute: \'{2}\', value: \'{3}\''
-                    .format(minion, item, key, value))
-                attributes[key] = value
+                if value:
+                    log.debug(
+                        'Adding attribute for minion: \'{0}\' '
+                        'grain: \'{1}\', attribute: \'{2}\', value: \'{3}\''
+                        .format(minion, item, key, value))
+                    attributes[key] = value
+                else:
+                    log.warning(
+                        'Requested grain \'{0}\' is not available '
+                        'on minion: {1}'.format(item, minion))
             except TypeError:
                 log.warning('Minion \'{0}\' grain \'{1}\' ignored '
                             'because it contains nested items.'
@@ -325,11 +340,16 @@ class ResourceGenerator(object):
         for item in self.options.tags:
             try:
                 new_tags = self._tags_from_grain(item, grains)
-                log.debug(
-                    'Adding tag for minion: \'{0}\' '
-                    'grain: \'{1}\', tag(s): \'{2}\''
-                    .format(minion, item, ','.join(str(x) for x in new_tags)))
-                map(tags.add, new_tags)
+                if new_tags:
+                    log.debug(
+                        'Adding tag for minion: \'{0}\' '
+                        'grain: \'{1}\', tag(s): \'{2}\''
+                        .format(minion, item, ','.join(str(x) for x in new_tags)))
+                    map(tags.add, new_tags)
+                else:
+                    log.warning(
+                        'Requested grain \'{0}\' is not available '
+                        'on minion: {1}'.format(item, minion))
             except TypeError:
                 log.warning('Minion \'{0}\' grain \'{1}\' ignored '
                             'because it contains nested items.'
@@ -344,6 +364,8 @@ class ResourceGenerator(object):
         value = salt.utils.traverse_dict_and_list(
             grains, item, default=None, delimiter=self.options.delimiter)
         if value is None:
+            pass
+        elif not value:
             pass
         elif isinstance(value, unicode):
             tags.add(value.encode('utf-8'))

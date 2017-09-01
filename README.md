@@ -167,10 +167,12 @@ resources.source.2.config.args=*
 ```
 
 ### Node Attributes
-Node attributes can be added by including the `--attributes` argument. This can be used to add any grain value as a node attribute in Rundeck. Note that the value of the grain must be a single value (not a list or dictionary). Nested grains can be specified using `:` as a delimiter, such as `--attributes locale_info:defaultlanguage`.
+Node attributes can be added by including the `--attributes` argument. This can be used to add any grain value as a node attribute in Rundeck. Note that the value of the grain must be a single value (not a list or dictionary). Nested grains can be specified using `:` as a delimiter, such as `--attributes locale_info:defaultlanguage`. The delimiter can be changed using the `--delimiter` command-line argument.
+Requesting an attribute for a grain that does not exist will emit a warning and continue without adding the attribute.
 
 ### Node Tags
 Node tags can be added by including the `--tags` argument. This is particularly useful when the value of a grain is a list, because a tag will be created for each item in the list. A common example of this is a `roles` grain. Tags will also be created for single value grains. For example, `--tags=init` will tag every Linux system with `systemd`, `upstart`, etc.
+Requesting a tag for a grain that does not exist will emit a warning and continue without adding the tag.
 
 ### Mine Function
 By default, this script depends on Salt Mine having access to `grains.items` on every minion. If you have an alias in place for that function, specify it using the `--mine-function` option.
