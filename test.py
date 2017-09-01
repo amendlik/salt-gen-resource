@@ -1,6 +1,8 @@
 import sys
 import yaml
+import os.path as path
 import optparse
+import salt.version as version
 from unittest import TestCase, TextTestRunner, main
 from SaltGenResource import ResourceGenerator, SaltNodesCommandParser
 from mock import patch, Mock
@@ -35,24 +37,19 @@ class TestNodeGenerator(TestCase):
     required_attributes = ['hostname', 'osArch', 'osFamily',
                            'osName', 'osVersion']
     default_args = ['mine.get', '*', 'grains.items']
-    default_kwargs = {'tgt_type': 'glob'}
+    default_kwargs = {}
 
     @classmethod
     def setUpClass(cls):
 
-        # Load mine return data
-        with open("test_mine.yaml", 'r') as stream:
-            try:
-                cls.mine = yaml.load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
+        # Set expected kwargs for minion call
+        if version.__saltstack_version__ >= version.SaltStackVersion.from_name('Nitrogen'):
+            cls.default_kwargs = {'tgt_type': 'glob'}
+        else:
+            cls.default_kwargs = {'expr_form': 'glob'}
 
-        # Load grains for server node
-        with open("test_config.yaml", 'r') as stream:
-            try:
-                cls.server_grains = yaml.load(stream)['grains']
-            except yaml.YAMLError as exc:
-                print(exc)
+        cls.mine = load_test_data('mine.yaml')
+        cls.server_grains = load_test_data('config.yaml')['grains']
 
     def test_single_attribute(self):
         with patch('SaltGenResource.SaltNodesCommandParser', MockParser()) as parser:
@@ -217,18 +214,9 @@ class MockParser:
         return self
 
     def __init__(self):
-        with open("test_config.yaml", 'r') as stream:
-            try:
-                self.config = yaml.load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
 
-        with open("test_options.yaml", 'r') as stream:
-            try:
-                self.options = optparse.Values(yaml.load(stream))
-            except yaml.YAMLError as exc:
-                print(exc)
-
+        self.config = load_test_data('config.yaml')
+        self.options = optparse.Values(load_test_data('options.yaml'))
         self.args = ''
 
     # noinspection PyUnusedLocal
@@ -238,14 +226,11 @@ class MockParser:
     def setup_logfile_logger(self):
         pass
 
+
 class MockMinion:
 
     def __init__(self):
-        with open("test_config.yaml", 'r') as stream:
-            try:
-                self.opts = yaml.load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
+        self.opts = load_test_data('config.yaml')
 
 
 class MockCaller:
@@ -255,14 +240,16 @@ class MockCaller:
 
     def __init__(self):
         self.sminion = MockMinion()
-        self.cmd = Mock()
+        self.cmd = Mock(return_value=load_test_data('mine.yaml'))
 
-        with open("test_mine.yaml", 'r') as stream:
-            try:
-                self.cmd.return_value = yaml.load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
 
+def load_test_data(dataset):
+    filename = path.join(path.dirname(path.abspath(__file__)), 'test_data', dataset)
+    with open(filename, 'r') as stream:
+        try:
+            return yaml.load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
 
 if __name__ == '__main__':
     runner = TextTestRunner(stream=sys.stdout, verbosity=2)

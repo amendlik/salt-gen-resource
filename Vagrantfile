@@ -20,6 +20,7 @@ Vagrant.configure("2") do |config|
     carbon.vm.provision :shell do |test|
       test.name = "run tests"
       test.inline = <<-SHELL
+        apt-get -y install python-mock
         salt-call -l quiet mine.update True
         python2 "/vagrant/test.py"
       SHELL
@@ -44,6 +45,7 @@ Vagrant.configure("2") do |config|
     nitrogen.vm.provision :shell do |test|
       test.name = "run tests"
       test.inline = <<-SHELL
+        apt-get -y install python-mock
         salt-call -l quiet mine.update True
         python2 "/vagrant/test.py"
       SHELL
