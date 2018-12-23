@@ -408,4 +408,4 @@ class ResourceGenerator(object):
 
 if __name__ == '__main__':
     # Print dict as YAML on stdout
-    print(yaml.dump(ResourceGenerator().run(), default_flow_style=False))
+    print(yaml.safe_dump(ResourceGenerator().run(), default_flow_style=False))
