@@ -20,16 +20,16 @@ log = logging.getLogger('salt-gen-resource')
 
 # noinspection PyClassHasNoInit
 class SaltNodesCommandParser(
-        six.with_metaclass(
-            salt.utils.parsers.OptionParserMeta,
-            salt.utils.parsers.OptionParser,
-            salt.utils.parsers.ConfigDirMixIn,
-            salt.utils.parsers.ExtendedTargetOptionsMixIn,
-            salt.utils.parsers.LogLevelMixIn)):
-    '''
+    six.with_metaclass(
+        salt.utils.parsers.OptionParserMeta,
+        salt.utils.parsers.OptionParser,
+        salt.utils.parsers.ConfigDirMixIn,
+        salt.utils.parsers.ExtendedTargetOptionsMixIn,
+        salt.utils.parsers.LogLevelMixIn)):
+    """
     Argument parser used by SaltGenResource to generate
     Rundeck node definitions.
-    '''
+    """
 
     usage = '%prog [options] <target> [<attr>=<value> ...]'
     description = 'Salt Mine node source for Rundeck.'
@@ -47,9 +47,9 @@ class SaltNodesCommandParser(
     ignore_servernode = ['username', 'description']
 
     def _mixin_setup(self):
-        '''
+        """
         Define arguments specific to SaltGenResource
-        '''
+        """
 
         self.add_option(
             '-m', '--mine-function',
@@ -97,9 +97,9 @@ class SaltNodesCommandParser(
         )
 
     def _mixin_after_parsed(self):
-        '''
+        """
         Validate and process arguments
-        '''
+        """
         if not os.path.isfile(self.get_config_file_path()):
             log.critical("Configuration file not found")
             sys.exit(-1)
@@ -161,11 +161,11 @@ class SaltNodesCommandParser(
     # noinspection PyUnusedLocal
     @staticmethod
     def set_callback(option, opt, value, parser):  # pylint: disable=unused-argument
-        '''
+        """
         Argument parser callback for handling multi-value sets.
         This callback converts comma-delimited or space-delimited strings
         to list types.
-        '''
+        """
         if ',' in value:
             setattr(parser.values, option.dest,
                     set(value.replace(' ', '').split(',')))
@@ -174,11 +174,11 @@ class SaltNodesCommandParser(
 
 
 class ResourceGenerator(object):
-    '''
+    """
     Provide a dictionary of node definitions.
     When written to stdout in YAML format, this dictionary is consumable
     by Rundeck.
-    '''
+    """
 
     # Define maps from grain values into expected strings
     _os_family_map = {'Linux': 'unix', 'Windows': 'windows'}
@@ -187,9 +187,9 @@ class ResourceGenerator(object):
     _mine_func = 'mine.get'
 
     def __init__(self, args=None):
-        '''
+        """
         Parse command arguments
-        '''
+        """
         # Call the configuration parser
         parser = SaltNodesCommandParser()
         parser.parse_args(args)
@@ -208,14 +208,14 @@ class ResourceGenerator(object):
         self.options = parser.options
 
     def run(self):
-        '''
+        """
         The main entry point for SaltGenResource. This method calls the Salt Mine
         and converts the returned data into a dictionary that conforms to the Rundeck
         specification for an external resource generator.
 
         The return is a Python dictionary. The caller is responsible for converting
         the dictionary into YAML for consumption by Rundeck.
-        '''
+        """
         resources = {}
 
         # Create a Salt Caller object
@@ -246,13 +246,13 @@ class ResourceGenerator(object):
             # Map required node attributes from grains
             local_grains = caller.sminion.opts['grains']
             resources[self._server_node_name] = {
-                'hostname':    self._server_node_name,
+                'hostname': self._server_node_name,
                 'description': 'Rundeck server node',
-                'username':    self.options.server_node_user,
-                'osName':      local_grains['kernel'],
-                'osVersion':   local_grains['kernelrelease'],
-                'osFamily':    self._os_family(local_grains['kernel']),
-                'osArch':      self._os_arch(local_grains['cpuarch'])
+                'username': self.options.server_node_user,
+                'osName': local_grains['kernel'],
+                'osVersion': local_grains['kernelrelease'],
+                'osFamily': self._os_family(local_grains['kernel']),
+                'osArch': self._os_arch(local_grains['cpuarch'])
             }
             # Create additional attributes from grains
             resources[self._server_node_name].update(
@@ -272,11 +272,11 @@ class ResourceGenerator(object):
         for minion, minion_grains in mine.iteritems():
             # Map required node attributes from grains
             resources[minion] = {
-                'hostname':   minion_grains['fqdn'],
-                'osName':     minion_grains['kernel'],
-                'osVersion':  minion_grains['kernelrelease'],
-                'osFamily':   self._os_family(minion_grains['kernel']),
-                'osArch':     self._os_arch(minion_grains['cpuarch'])
+                'hostname': minion_grains['fqdn'],
+                'osName': minion_grains['kernel'],
+                'osVersion': minion_grains['kernelrelease'],
+                'osFamily': self._os_family(minion_grains['kernel']),
+                'osArch': self._os_arch(minion_grains['cpuarch'])
             }
             # Create additional attributes from grains
             resources[minion].update(
@@ -296,9 +296,9 @@ class ResourceGenerator(object):
         return resources
 
     def _create_attributes(self, minion, grains):
-        '''
+        """
         Loop over requested attributes and request a value for each
-        '''
+        """
         attributes = {}
         for item in self.options.attributes:
             try:
@@ -320,9 +320,9 @@ class ResourceGenerator(object):
         return attributes
 
     def _attribute_from_grain(self, item, grains):
-        '''
+        """
         Provide the value for a single attribute from a grain
-        '''
+        """
         key = item.replace(':', '_')
         value = salt.utils.traverse_dict_and_list(
             grains, item, default='',
@@ -334,9 +334,9 @@ class ResourceGenerator(object):
         return key, value
 
     def _create_tags(self, minion, grains):
-        '''
+        """
         Loop over requested tags and request a value for each
-        '''
+        """
         tags = set()
         for item in self.options.tags:
             try:
@@ -358,9 +358,9 @@ class ResourceGenerator(object):
         return list(tags)
 
     def _tags_from_grain(self, item, grains):
-        '''
+        """
         Define a single tag from a grain value
-        '''
+        """
         tags = set()
         value = salt.utils.traverse_dict_and_list(
             grains, item, default=None, delimiter=self.options.delimiter)
@@ -388,9 +388,9 @@ class ResourceGenerator(object):
 
     @classmethod
     def _os_family(cls, value):
-        '''
+        """
         Map the os_family used by Salt to one used by Rundeck
-        '''
+        """
         if value in cls._os_family_map:
             return cls._os_family_map[value]
         else:
@@ -398,9 +398,9 @@ class ResourceGenerator(object):
 
     @classmethod
     def _os_arch(cls, value):
-        '''
+        """
         Map the os_arch used by Salt to one used by Rundeck
-        '''
+        """
         if value in cls._os_arch_map:
             return cls._os_arch_map[value]
         else:
@@ -408,9 +408,9 @@ class ResourceGenerator(object):
 
     @staticmethod
     def as_yaml(resources):
-        '''
+        """
         Write the resources dictionary to stdout as YAML
-        '''
+        """
         return yaml.safe_dump(resources, default_flow_style=False)
 
 

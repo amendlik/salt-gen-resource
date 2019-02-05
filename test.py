@@ -211,10 +211,10 @@ class TestNodeGenerator(TestCase):
 
 
 class TestServerNodeGenerator(TestNodeGenerator):
-    '''
+    """
     This test case runs all the same tests as TestNodeGenerator,
     but as if the --include-server-node option was passed.
-    '''
+    """
     include_server_node = True
 
 
@@ -263,6 +263,7 @@ def load_test_data(dataset):
             return yaml.load(stream)
         except yaml.YAMLError as exc:
             print(exc)
+
 
 if __name__ == '__main__':
     runner = TextTestRunner(stream=sys.stdout, verbosity=2)
