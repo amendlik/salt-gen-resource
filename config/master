@@ -1,5 +1,0 @@
-interface: 127.0.0.1
-auto_accept: True
-hash_type: sha256
-file_ignore_glob: []
-file_ignore_regex: []

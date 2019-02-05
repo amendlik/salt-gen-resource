@@ -1,9 +1,0 @@
-id: vagrant
-master: localhost
-hash_type: sha256
-mine_functions:
-  grains.items: []
-file_ignore_glob: []
-file_ignore_regex: []
-log_granular_levels:
-  py.warnings: error
