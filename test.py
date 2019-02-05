@@ -153,7 +153,7 @@ class TestNodeGenerator(TestCase):
 
     def test_unicode(self):
         with patch('SaltGenResource.SaltNodesCommandParser', MockParser()) as parser:
-            with patch('salt.client.Caller', MockCaller()) as caller:
+            with patch('salt.client.Caller', MockCaller()):
                 call_kwargs = dict.copy(self.default_kwargs)
                 parser.options.include_server_node = self.include_server_node
                 call_kwargs['exclude_minion'] = self.include_server_node
