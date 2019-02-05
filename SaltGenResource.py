@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+# -*- coding: utf-8 -*-
 
 import salt.client
 import salt.utils
@@ -405,7 +406,14 @@ class ResourceGenerator(object):
         else:
             return value
 
+    @staticmethod
+    def as_yaml(resources):
+        '''
+        Write the resources dictionary to stdout as YAML
+        '''
+        return yaml.safe_dump(resources, default_flow_style=False)
+
 
 if __name__ == '__main__':
     # Print dict as YAML on stdout
-    print(yaml.safe_dump(ResourceGenerator().run(), default_flow_style=False))
+    print(ResourceGenerator.as_yaml(ResourceGenerator().run()))

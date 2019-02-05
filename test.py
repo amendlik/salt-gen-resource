@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import sys
 import yaml
 import os.path as path
@@ -148,6 +150,17 @@ class TestNodeGenerator(TestCase):
                         self.assertEqual(resources[host]['username'], 'root')
 
                 caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
+
+    def test_unicode(self):
+        with patch('SaltGenResource.SaltNodesCommandParser', MockParser()) as parser:
+            with patch('salt.client.Caller', MockCaller()) as caller:
+                call_kwargs = dict.copy(self.default_kwargs)
+                parser.options.include_server_node = self.include_server_node
+                call_kwargs['exclude_minion'] = self.include_server_node
+
+                parser.args = [u'color=⋐⊮⊰⟒']
+                output = ResourceGenerator.as_yaml(ResourceGenerator().run())
+                self.assertNotIn('!!python/unicode', output)
 
     def _test_required_attributes(self, resources):
         self.assertTrue(len(resources) > 0)
