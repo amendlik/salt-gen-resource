@@ -14,6 +14,7 @@ import yaml
 import logging
 import os
 import sys
+import six
 
 log = logging.getLogger('salt-gen-resource')
 
@@ -260,7 +261,7 @@ class ResourceGenerator(object):
 
             # Create static attributes
             resources[self._server_node_name].update({
-                k: v for k, v in self.static.iteritems()
+                k: v for k, v in six.iteritems(self.static)
                 if k not in SaltNodesCommandParser.ignore_attributes + SaltNodesCommandParser.ignore_servernode})
 
             # Create tags from grains
@@ -269,7 +270,7 @@ class ResourceGenerator(object):
                 resources[self._server_node_name]['tags'] = tags
 
         # Map grains into a Rundeck resource dict
-        for minion, minion_grains in mine.iteritems():
+        for minion, minion_grains in six.iteritems(mine):
             # Map required node attributes from grains
             resources[minion] = {
                 'hostname': minion_grains['fqdn'],
@@ -283,7 +284,7 @@ class ResourceGenerator(object):
                 self._create_attributes(minion, minion_grains))
             # Create static attributes
             resources[minion].update({
-                k: v for k, v in self.static.iteritems()
+                k: v for k, v in six.iteritems(self.static)
                 if k not in SaltNodesCommandParser.ignore_attributes})
             # Create tags from grains
             tags = self._create_tags(minion, minion_grains)

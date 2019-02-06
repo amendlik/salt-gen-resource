@@ -2,6 +2,7 @@
 
 import sys
 import yaml
+import six
 import os.path as path
 import optparse
 import salt.version as version
@@ -124,7 +125,7 @@ class TestNodeGenerator(TestCase):
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, ['color', 'pattern'])
 
-                for host, attributes in resources.iteritems():
+                for host, attributes in six.iteritems(resources):
                     self.assertEqual(resources[host]['color'], 'yellow')
                     self.assertEqual(resources[host]['pattern'], 'polka dot')
 
@@ -143,7 +144,7 @@ class TestNodeGenerator(TestCase):
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, ['username'])
 
-                for host, attributes in resources.iteritems():
+                for host, attributes in six.iteritems(resources):
                     if host == ResourceGenerator._server_node_name:
                         self.assertEqual(resources[host]['username'], parser.options.server_node_user)
                     else:
@@ -164,7 +165,7 @@ class TestNodeGenerator(TestCase):
 
     def _test_required_attributes(self, resources):
         self.assertTrue(len(resources) > 0)
-        for host, attributes in resources.iteritems():
+        for host, attributes in six.iteritems(resources):
             for attribute in self.required_attributes:
                 self.assertIn(attribute, attributes)
                 self.assertIsNotNone(attributes[attribute])
@@ -196,7 +197,7 @@ class TestNodeGenerator(TestCase):
 
     def _test_attributes(self, resources, needed):
         self.assertTrue(len(resources) > 0)
-        for host, attributes in resources.iteritems():
+        for host, attributes in six.iteritems(resources):
             for attribute in needed:
                 self.assertIn(attribute, attributes)
                 self.assertIsNotNone(attributes[attribute])
@@ -204,7 +205,7 @@ class TestNodeGenerator(TestCase):
 
     def _test_tags(self, resources, needed):
         self.assertTrue(len(resources) > 0)
-        for host, attributes in resources.iteritems():
+        for host, attributes in six.iteritems(resources):
             self.assertIn('tags', attributes)
             self.assertIsNotNone(attributes['tags'])
             self.assertEqual(len(attributes['tags']), len(needed))
