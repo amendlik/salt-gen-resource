@@ -328,7 +328,7 @@ class ResourceGenerator(object):
         value = salt.utils.traverse_dict_and_list(
             grains, item, default='',
             delimiter=self.options.delimiter)
-        if isinstance(value, unicode):
+        if isinstance(value, six.string_types):
             value = value.encode('utf-8')
         elif hasattr(value, '__iter__'):
             raise TypeError
@@ -369,9 +369,9 @@ class ResourceGenerator(object):
             pass
         elif not value:
             pass
-        elif isinstance(value, unicode):
+        elif isinstance(value, six.string_types):
             tags.add(value.encode('utf-8'))
-        elif isinstance(value, str):
+        elif isinstance(value, six.binary_type):
             tags.add(value)
         elif isinstance(value, dict):
             raise TypeError
@@ -379,7 +379,7 @@ class ResourceGenerator(object):
             for nesteditem in value:
                 if hasattr(nesteditem, '__iter__'):
                     pass
-                elif isinstance(nesteditem, unicode):
+                elif isinstance(nesteditem, six.string_types):
                     tags.add(nesteditem.encode('utf-8'))
                 else:
                     tags.add(nesteditem)
