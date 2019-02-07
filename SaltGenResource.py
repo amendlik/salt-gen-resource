@@ -231,16 +231,16 @@ class ResourceGenerator(object):
 
         # Call Salt Mine to retrieve grains for all nodes
         log.debug(
-            'Calling {0} with target: \'{1}\' type: \'{2}\''
-            .format(self._mine_func, self.config['tgt'], self.config['selected_target_option']))
+            'Calling %s with target: \'%s\' type: \'%s\'',
+            self._mine_func, self.config['tgt'], self.config['selected_target_option'])
         mine = caller.cmd(
             self._mine_func,
             self.config['tgt'],
             self.options.mine_function,
             **kwargs)
         log.debug(
-            'Salt Mine function \'{0}\' returned {1} minion{2}'
-            .format(self._mine_func, len(mine), '' if len(mine) == 1 else 's'))
+            'Salt Mine function \'%s\' returned %d minion%s',
+            self._mine_func, len(mine), '' if len(mine) == 1 else 's')
 
         # Special handling for server node
         if self.options.include_server_node is True:
@@ -306,18 +306,13 @@ class ResourceGenerator(object):
                 key, value = self._attribute_from_grain(item, grains)
                 if value:
                     log.debug(
-                        'Adding attribute for minion: \'{0}\' '
-                        'grain: \'{1}\', attribute: \'{2}\', value: \'{3}\''
-                        .format(minion, item, key, value))
+                        'Adding attribute for minion: \'%s\' grain: \'%s\', attribute: \'%s\', value: \'%s\'',
+                        minion, item, key, value)
                     attributes[key] = value
                 else:
-                    log.warning(
-                        'Requested grain \'{0}\' is not available '
-                        'on minion: {1}'.format(item, minion))
+                    log.warning('Requested grain \'%s\' is not available on minion: %s', item, minion)
             except TypeError:
-                log.warning('Minion \'{0}\' grain \'{1}\' ignored '
-                            'because it contains nested items.'
-                            .format(minion, item))
+                log.warning('Minion \'%s\' grain \'%s\' ignored because it contains nested items.', minion, item)
         return attributes
 
     def _attribute_from_grain(self, item, grains):
@@ -343,19 +338,12 @@ class ResourceGenerator(object):
             try:
                 new_tags = self._tags_from_grain(item, grains)
                 if not new_tags:
-                    log.warning(
-                        'Requested grain \'{0}\' is not available '
-                        'on minion: {1}'.format(item, minion))
+                    log.warning('Requested grain \'%s\' is not available on minion: %s', item, minion)
                 for tag in new_tags:
-                    log.debug(
-                        'Adding tag for minion: \'{0}\' '
-                        'grain: \'{1}\', tag: \'{2}\''
-                        .format(minion, item, tag))
+                    log.debug('Adding tag for minion: \'%s\' grain: \'%s\', tag: \'%s\'', minion, item, tag)
                     tags.add(tag)
             except TypeError:
-                log.warning('Minion \'{0}\' grain \'{1}\' ignored '
-                            'because it contains nested items.'
-                            .format(minion, item))
+                log.warning('Minion \'%s\' grain \'%s\' ignored because it contains nested items.', minion, item)
         return list(tags)
 
     def _tags_from_grain(self, item, grains):
