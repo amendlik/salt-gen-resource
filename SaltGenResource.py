@@ -342,16 +342,16 @@ class ResourceGenerator(object):
         for item in self.options.tags:
             try:
                 new_tags = self._tags_from_grain(item, grains)
-                if new_tags:
-                    log.debug(
-                        'Adding tag for minion: \'{0}\' '
-                        'grain: \'{1}\', tag(s): \'{2}\''
-                        .format(minion, item, ','.join(str(x) for x in new_tags)))
-                    map(tags.add, new_tags)
-                else:
+                if not new_tags:
                     log.warning(
                         'Requested grain \'{0}\' is not available '
                         'on minion: {1}'.format(item, minion))
+                for tag in new_tags:
+                    log.debug(
+                        'Adding tag for minion: \'{0}\' '
+                        'grain: \'{1}\', tag: \'{2}\''
+                        .format(minion, item, tag))
+                    tags.add(tag)
             except TypeError:
                 log.warning('Minion \'{0}\' grain \'{1}\' ignored '
                             'because it contains nested items.'
