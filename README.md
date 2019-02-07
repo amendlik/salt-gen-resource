@@ -37,7 +37,7 @@ resources.source.2.config.format=resourceyaml
 resources.source.2.config.interpreter=sudo
 resources.source.2.type=script
 ```
-**Note:** Be careful about deleting an existing node source from the configuration file. One of those sources usually provides the 'server node', which is necessary for certiain Rundeck workflows. The server node is **not** provided by `SaltGenResource.py` by default. 
+**Note:** Be careful about deleting an existing node source from the configuration file. One of those sources usually provides the 'server node', which is necessary for certain Rundeck workflows. The server node is **not** provided by `SaltGenResource.py` by default. 
 Add additional node sources as necessary, by using another number in the properties (resources.source._#_.config), or configure `SaltGenResource.py` to provide the server node with `--include-server-node`.
 
 ### Salt Mine
@@ -184,7 +184,7 @@ SaltGenResource.py '*' username='rduser'
 ```
 
 ### Configuration File
-SaltGenResource loads its configuration from the standard Minion configuration files, normally located at `/etc/salt/minion` and `/etc/salt/minion.d/*.conf` on Linux. This path is different on other operating systems, and can be overriden using the `-c` or `--config-dir` command-line options.
+SaltGenResource loads its configuration from the standard Minion configuration files, normally located at `/etc/salt/minion` and `/etc/salt/minion.d/*.conf` on Linux. This path is different on other operating systems, and can be overridden using the `-c` or `--config-dir` command-line options.
 In addition to the normal, [documented](https://docs.saltstack.com/en/latest/ref/configuration/minion.html) configuration, there are two additional options to control file-based logging:
 
 | Option | Default Value | Description |
