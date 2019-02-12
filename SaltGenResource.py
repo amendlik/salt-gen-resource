@@ -16,6 +16,12 @@ import os
 import sys
 import six
 
+# Adjust module import depending on Salt version
+if version.__saltstack_version__ >= version.SaltStackVersion.from_name('Oxygen'):
+    import salt.utils.data as datautils
+else:
+    import salt.utils as datautils
+
 log = logging.getLogger('salt-gen-resource')
 
 
@@ -340,7 +346,7 @@ class ResourceGenerator(object):
         Provide the value for a single attribute from a grain
         """
         key = item.replace(':', '_')
-        value = salt.utils.traverse_dict_and_list(
+        value = datautils.traverse_dict_and_list(
             grains, item, default='',
             delimiter=self.options.delimiter)
         if isinstance(value, six.string_types):
@@ -372,7 +378,7 @@ class ResourceGenerator(object):
         Define a single tag from a grain value
         """
         tags = set()
-        value = salt.utils.traverse_dict_and_list(
+        value = datautils.traverse_dict_and_list(
             grains, item, default=None, delimiter=self.options.delimiter)
         if value is None:
             pass
