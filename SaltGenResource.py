@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import salt.client
@@ -14,6 +14,13 @@ import yaml
 import logging
 import os
 import sys
+import six
+
+# Adjust module import depending on Salt version
+if version.__saltstack_version__ >= version.SaltStackVersion.from_name('Oxygen'):
+    import salt.utils.data as datautils
+else:
+    import salt.utils as datautils
 
 log = logging.getLogger('salt-gen-resource')
 
@@ -186,6 +193,8 @@ class ResourceGenerator(object):
     _server_node_name = 'localhost'
     _mine_func = 'mine.get'
 
+    resources = {}
+
     def __init__(self, args=None):
         """
         Parse command arguments
@@ -207,16 +216,34 @@ class ResourceGenerator(object):
         self.config = parser.config
         self.options = parser.options
 
-    def run(self):
+        # Generate resources
+        self._generate()
+
+    def as_dict(self):
         """
-        The main entry point for SaltGenResource. This method calls the Salt Mine
-        and converts the returned data into a dictionary that conforms to the Rundeck
-        specification for an external resource generator.
+        Return the generated resources as a Python dictionary
+        """
+        return self.resources
+
+    def as_yaml(self):
+        """
+        Return the generated resources as YAML
+        """
+        return self._dump_yaml(self.resources)
+
+    @staticmethod
+    def _dump_yaml(resources):
+        return yaml.safe_dump(resources, default_flow_style=False)
+
+    def _generate(self):
+        """
+        The main function for SaltGenResource. This method calls the Salt Mine
+        and converts the returned data into a dictionary that conforms to the
+        Rundeck specification for an external resource generator.
 
         The return is a Python dictionary. The caller is responsible for converting
         the dictionary into YAML for consumption by Rundeck.
         """
-        resources = {}
 
         # Create a Salt Caller object
         caller = salt.client.Caller(c_path=None, mopts=self.config)
@@ -230,22 +257,22 @@ class ResourceGenerator(object):
 
         # Call Salt Mine to retrieve grains for all nodes
         log.debug(
-            'Calling {0} with target: \'{1}\' type: \'{2}\''
-            .format(self._mine_func, self.config['tgt'], self.config['selected_target_option']))
+            'Calling %s with target: \'%s\' type: \'%s\'',
+            self._mine_func, self.config['tgt'], self.config['selected_target_option'])
         mine = caller.cmd(
             self._mine_func,
             self.config['tgt'],
             self.options.mine_function,
             **kwargs)
         log.debug(
-            'Salt Mine function \'{0}\' returned {1} minion{2}'
-            .format(self._mine_func, len(mine), '' if len(mine) == 1 else 's'))
+            'Salt Mine function \'%s\' returned %d minion%s',
+            self._mine_func, len(mine), '' if len(mine) == 1 else 's')
 
         # Special handling for server node
         if self.options.include_server_node is True:
             # Map required node attributes from grains
             local_grains = caller.sminion.opts['grains']
-            resources[self._server_node_name] = {
+            self.resources[self._server_node_name] = {
                 'hostname': self._server_node_name,
                 'description': 'Rundeck server node',
                 'username': self.options.server_node_user,
@@ -255,23 +282,23 @@ class ResourceGenerator(object):
                 'osArch': self._os_arch(local_grains['cpuarch'])
             }
             # Create additional attributes from grains
-            resources[self._server_node_name].update(
+            self.resources[self._server_node_name].update(
                 self._create_attributes(self._server_node_name, local_grains))
 
             # Create static attributes
-            resources[self._server_node_name].update({
-                k: v for k, v in self.static.iteritems()
+            self.resources[self._server_node_name].update({
+                k: v for k, v in six.iteritems(self.static)
                 if k not in SaltNodesCommandParser.ignore_attributes + SaltNodesCommandParser.ignore_servernode})
 
             # Create tags from grains
             tags = self._create_tags(self._server_node_name, local_grains)
             if len(tags) > 0:
-                resources[self._server_node_name]['tags'] = tags
+                self.resources[self._server_node_name]['tags'] = tags
 
         # Map grains into a Rundeck resource dict
-        for minion, minion_grains in mine.iteritems():
+        for minion, minion_grains in six.iteritems(mine):
             # Map required node attributes from grains
-            resources[minion] = {
+            self.resources[minion] = {
                 'hostname': minion_grains['fqdn'],
                 'osName': minion_grains['kernel'],
                 'osVersion': minion_grains['kernelrelease'],
@@ -279,21 +306,21 @@ class ResourceGenerator(object):
                 'osArch': self._os_arch(minion_grains['cpuarch'])
             }
             # Create additional attributes from grains
-            resources[minion].update(
+            self.resources[minion].update(
                 self._create_attributes(minion, minion_grains))
             # Create static attributes
-            resources[minion].update({
-                k: v for k, v in self.static.iteritems()
+            self.resources[minion].update({
+                k: v for k, v in six.iteritems(self.static)
                 if k not in SaltNodesCommandParser.ignore_attributes})
             # Create tags from grains
             tags = self._create_tags(minion, minion_grains)
             if len(tags) > 0:
-                resources[minion]['tags'] = tags
+                self.resources[minion]['tags'] = tags
 
-        if not resources:
+        if not self.resources:
             log.warning('No resources returned.')
 
-        return resources
+        return
 
     def _create_attributes(self, minion, grains):
         """
@@ -305,18 +332,13 @@ class ResourceGenerator(object):
                 key, value = self._attribute_from_grain(item, grains)
                 if value:
                     log.debug(
-                        'Adding attribute for minion: \'{0}\' '
-                        'grain: \'{1}\', attribute: \'{2}\', value: \'{3}\''
-                        .format(minion, item, key, value))
+                        'Adding attribute for minion: \'%s\' grain: \'%s\', attribute: \'%s\', value: \'%s\'',
+                        minion, item, key, value)
                     attributes[key] = value
                 else:
-                    log.warning(
-                        'Requested grain \'{0}\' is not available '
-                        'on minion: {1}'.format(item, minion))
+                    log.warning('Requested grain \'%s\' is not available on minion: %s', item, minion)
             except TypeError:
-                log.warning('Minion \'{0}\' grain \'{1}\' ignored '
-                            'because it contains nested items.'
-                            .format(minion, item))
+                log.warning('Minion \'%s\' grain \'%s\' ignored because it contains nested items.', minion, item)
         return attributes
 
     def _attribute_from_grain(self, item, grains):
@@ -324,11 +346,12 @@ class ResourceGenerator(object):
         Provide the value for a single attribute from a grain
         """
         key = item.replace(':', '_')
-        value = salt.utils.traverse_dict_and_list(
+        value = datautils.traverse_dict_and_list(
             grains, item, default='',
             delimiter=self.options.delimiter)
-        if isinstance(value, unicode):
-            value = value.encode('utf-8')
+        if isinstance(value, six.string_types):
+            if six.PY2:
+                value = value.encode('utf-8')
         elif hasattr(value, '__iter__'):
             raise TypeError
         return key, value
@@ -341,20 +364,13 @@ class ResourceGenerator(object):
         for item in self.options.tags:
             try:
                 new_tags = self._tags_from_grain(item, grains)
-                if new_tags:
-                    log.debug(
-                        'Adding tag for minion: \'{0}\' '
-                        'grain: \'{1}\', tag(s): \'{2}\''
-                        .format(minion, item, ','.join(str(x) for x in new_tags)))
-                    map(tags.add, new_tags)
-                else:
-                    log.warning(
-                        'Requested grain \'{0}\' is not available '
-                        'on minion: {1}'.format(item, minion))
+                if not new_tags:
+                    log.warning('Requested grain \'%s\' is not available on minion: %s', item, minion)
+                for tag in new_tags:
+                    log.debug('Adding tag for minion: \'%s\' grain: \'%s\', tag: \'%s\'', minion, item, tag)
+                    tags.add(tag)
             except TypeError:
-                log.warning('Minion \'{0}\' grain \'{1}\' ignored '
-                            'because it contains nested items.'
-                            .format(minion, item))
+                log.warning('Minion \'%s\' grain \'%s\' ignored because it contains nested items.', minion, item)
         return list(tags)
 
     def _tags_from_grain(self, item, grains):
@@ -362,15 +378,18 @@ class ResourceGenerator(object):
         Define a single tag from a grain value
         """
         tags = set()
-        value = salt.utils.traverse_dict_and_list(
+        value = datautils.traverse_dict_and_list(
             grains, item, default=None, delimiter=self.options.delimiter)
         if value is None:
             pass
         elif not value:
             pass
-        elif isinstance(value, unicode):
-            tags.add(value.encode('utf-8'))
-        elif isinstance(value, str):
+        elif isinstance(value, six.string_types):
+            if six.PY2:
+                tags.add(value.encode('utf-8'))
+            else:
+                tags.add(value)
+        elif isinstance(value, six.binary_type):
             tags.add(value)
         elif isinstance(value, dict):
             raise TypeError
@@ -378,7 +397,7 @@ class ResourceGenerator(object):
             for nesteditem in value:
                 if hasattr(nesteditem, '__iter__'):
                     pass
-                elif isinstance(nesteditem, unicode):
+                elif isinstance(nesteditem, six.string_types):
                     tags.add(nesteditem.encode('utf-8'))
                 else:
                     tags.add(nesteditem)
@@ -406,14 +425,7 @@ class ResourceGenerator(object):
         else:
             return value
 
-    @staticmethod
-    def as_yaml(resources):
-        """
-        Write the resources dictionary to stdout as YAML
-        """
-        return yaml.safe_dump(resources, default_flow_style=False)
-
 
 if __name__ == '__main__':
     # Print dict as YAML on stdout
-    print(ResourceGenerator.as_yaml(ResourceGenerator().run()))
+    print(ResourceGenerator().as_yaml())

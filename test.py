@@ -2,6 +2,7 @@
 
 import sys
 import yaml
+import six
 import os.path as path
 import optparse
 import salt.version as version
@@ -62,7 +63,7 @@ class TestNodeGenerator(TestCase):
                 call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.options.attributes = ['os']
-                resources = ResourceGenerator().run()
+                resources = ResourceGenerator().as_dict()
 
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, parser.options.attributes)
@@ -77,7 +78,7 @@ class TestNodeGenerator(TestCase):
                 call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.options.attributes = ['os', 'os_family']
-                resources = ResourceGenerator().run()
+                resources = ResourceGenerator().as_dict()
 
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, parser.options.attributes)
@@ -91,7 +92,7 @@ class TestNodeGenerator(TestCase):
                 call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.options.tags = ['os']
-                resources = ResourceGenerator().run()
+                resources = ResourceGenerator().as_dict()
 
                 self._test_required_attributes(resources)
                 self._test_tags(resources, parser.options.tags)
@@ -105,7 +106,7 @@ class TestNodeGenerator(TestCase):
                 call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.options.tags = ['os', 'kernelrelease']
-                resources = ResourceGenerator().run()
+                resources = ResourceGenerator().as_dict()
 
                 self._test_required_attributes(resources)
                 self._test_tags(resources, parser.options.tags)
@@ -119,12 +120,12 @@ class TestNodeGenerator(TestCase):
                 call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.args = ['color=yellow', 'pattern=\'polka dot\'']
-                resources = ResourceGenerator().run()
+                resources = ResourceGenerator().as_dict()
 
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, ['color', 'pattern'])
 
-                for host, attributes in resources.iteritems():
+                for host, attributes in six.iteritems(resources):
                     self.assertEqual(resources[host]['color'], 'yellow')
                     self.assertEqual(resources[host]['pattern'], 'polka dot')
 
@@ -138,12 +139,12 @@ class TestNodeGenerator(TestCase):
                 call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.args = ['username=root']
-                resources = ResourceGenerator().run()
+                resources = ResourceGenerator().as_dict()
 
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, ['username'])
 
-                for host, attributes in resources.iteritems():
+                for host, attributes in six.iteritems(resources):
                     if host == ResourceGenerator._server_node_name:
                         self.assertEqual(resources[host]['username'], parser.options.server_node_user)
                     else:
@@ -159,12 +160,12 @@ class TestNodeGenerator(TestCase):
                 call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.args = [u'color=⋐⊮⊰⟒']
-                output = ResourceGenerator.as_yaml(ResourceGenerator().run())
+                output = ResourceGenerator().as_yaml()
                 self.assertNotIn('!!python/unicode', output)
 
     def _test_required_attributes(self, resources):
         self.assertTrue(len(resources) > 0)
-        for host, attributes in resources.iteritems():
+        for host, attributes in six.iteritems(resources):
             for attribute in self.required_attributes:
                 self.assertIn(attribute, attributes)
                 self.assertIsNotNone(attributes[attribute])
@@ -196,7 +197,8 @@ class TestNodeGenerator(TestCase):
 
     def _test_attributes(self, resources, needed):
         self.assertTrue(len(resources) > 0)
-        for host, attributes in resources.iteritems():
+        self.assertNotIn('!!', ResourceGenerator._dump_yaml(resources))
+        for host, attributes in six.iteritems(resources):
             for attribute in needed:
                 self.assertIn(attribute, attributes)
                 self.assertIsNotNone(attributes[attribute])
@@ -204,7 +206,8 @@ class TestNodeGenerator(TestCase):
 
     def _test_tags(self, resources, needed):
         self.assertTrue(len(resources) > 0)
-        for host, attributes in resources.iteritems():
+        self.assertNotIn('!!', ResourceGenerator._dump_yaml(resources))
+        for host, attributes in six.iteritems(resources):
             self.assertIn('tags', attributes)
             self.assertIsNotNone(attributes['tags'])
             self.assertEqual(len(attributes['tags']), len(needed))
@@ -227,7 +230,6 @@ class MockParser:
         return self
 
     def __init__(self):
-
         self.config = load_test_data('config.yaml')
         self.options = optparse.Values(load_test_data('options.yaml'))
         self.args = ''
