@@ -63,7 +63,7 @@ class TestNodeGenerator(TestCase):
                 call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.options.attributes = ['os']
-                resources = ResourceGenerator().run()
+                resources = ResourceGenerator().as_dict()
 
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, parser.options.attributes)
@@ -78,7 +78,7 @@ class TestNodeGenerator(TestCase):
                 call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.options.attributes = ['os', 'os_family']
-                resources = ResourceGenerator().run()
+                resources = ResourceGenerator().as_dict()
 
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, parser.options.attributes)
@@ -92,7 +92,7 @@ class TestNodeGenerator(TestCase):
                 call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.options.tags = ['os']
-                resources = ResourceGenerator().run()
+                resources = ResourceGenerator().as_dict()
 
                 self._test_required_attributes(resources)
                 self._test_tags(resources, parser.options.tags)
@@ -106,7 +106,7 @@ class TestNodeGenerator(TestCase):
                 call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.options.tags = ['os', 'kernelrelease']
-                resources = ResourceGenerator().run()
+                resources = ResourceGenerator().as_dict()
 
                 self._test_required_attributes(resources)
                 self._test_tags(resources, parser.options.tags)
@@ -120,7 +120,7 @@ class TestNodeGenerator(TestCase):
                 call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.args = ['color=yellow', 'pattern=\'polka dot\'']
-                resources = ResourceGenerator().run()
+                resources = ResourceGenerator().as_dict()
 
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, ['color', 'pattern'])
@@ -139,7 +139,7 @@ class TestNodeGenerator(TestCase):
                 call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.args = ['username=root']
-                resources = ResourceGenerator().run()
+                resources = ResourceGenerator().as_dict()
 
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, ['username'])
@@ -160,7 +160,7 @@ class TestNodeGenerator(TestCase):
                 call_kwargs['exclude_minion'] = self.include_server_node
 
                 parser.args = [u'color=⋐⊮⊰⟒']
-                output = ResourceGenerator.as_yaml(ResourceGenerator().run())
+                output = ResourceGenerator().as_yaml()
                 self.assertNotIn('!!python/unicode', output)
 
     def _test_required_attributes(self, resources):
