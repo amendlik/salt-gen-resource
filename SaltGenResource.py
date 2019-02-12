@@ -214,13 +214,20 @@ class ResourceGenerator(object):
         self._generate()
 
     def as_dict(self):
+        """
+        Return the generated resources as a Python dictionary
+        """
         return self.resources
 
     def as_yaml(self):
         """
-        Write the resources dictionary to stdout as YAML
+        Return the generated resources as YAML
         """
-        return yaml.safe_dump(self.resources, default_flow_style=False)
+        return self._dump_yaml(self.resources)
+
+    @staticmethod
+    def _dump_yaml(resources):
+        return yaml.safe_dump(resources, default_flow_style=False)
 
     def _generate(self):
         """
@@ -337,7 +344,8 @@ class ResourceGenerator(object):
             grains, item, default='',
             delimiter=self.options.delimiter)
         if isinstance(value, six.string_types):
-            value = value.encode('utf-8')
+            if six.PY2:
+                value = value.encode('utf-8')
         elif hasattr(value, '__iter__'):
             raise TypeError
         return key, value
@@ -371,7 +379,10 @@ class ResourceGenerator(object):
         elif not value:
             pass
         elif isinstance(value, six.string_types):
-            tags.add(value.encode('utf-8'))
+            if six.PY2:
+                tags.add(value.encode('utf-8'))
+            else:
+                tags.add(value)
         elif isinstance(value, six.binary_type):
             tags.add(value)
         elif isinstance(value, dict):

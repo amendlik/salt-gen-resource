@@ -197,6 +197,7 @@ class TestNodeGenerator(TestCase):
 
     def _test_attributes(self, resources, needed):
         self.assertTrue(len(resources) > 0)
+        self.assertNotIn('!!', ResourceGenerator._dump_yaml(resources))
         for host, attributes in six.iteritems(resources):
             for attribute in needed:
                 self.assertIn(attribute, attributes)
@@ -205,6 +206,7 @@ class TestNodeGenerator(TestCase):
 
     def _test_tags(self, resources, needed):
         self.assertTrue(len(resources) > 0)
+        self.assertNotIn('!!', ResourceGenerator._dump_yaml(resources))
         for host, attributes in six.iteritems(resources):
             self.assertIn('tags', attributes)
             self.assertIsNotNone(attributes['tags'])
@@ -228,7 +230,6 @@ class MockParser:
         return self
 
     def __init__(self):
-
         self.config = load_test_data('config.yaml')
         self.options = optparse.Values(load_test_data('options.yaml'))
         self.args = ''
