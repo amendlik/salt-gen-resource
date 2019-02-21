@@ -54,7 +54,9 @@ mine_functions:
 ```
 When using a function alias (`allgrains`, in the example above), be sure to supply the name with `--mine-function`.
 
-See the [online documentation](https://docs.saltstack.com/en/latest/topics/mine/#the-salt-mine) for more detail.
+**Note:** Salt Mine values are refreshed according to the interval defined by the `mine_interval` option (60 minutes, by default). When the mine configuration is created or changed, the values will not be updated until the next interval elapses. To force an immediate update, use the [`mine.update`](https://docs.saltstack.com/en/latest/ref/modules/all/salt.modules.mine.html#salt.modules.mine.update) function.
+
+See the Salt Mine [online documentation](https://docs.saltstack.com/en/latest/topics/mine/#the-salt-mine) for more detail.
 
 ## Configuration
 
