@@ -352,7 +352,7 @@ class ResourceGenerator(object):
         if isinstance(value, six.string_types):
             if six.PY2:
                 value = value.encode('utf-8')
-		elif isinstance(value, list):
+	elif isinstance(value, list):
             value = value[0].encode('utf-8')
             log.warning('Grain \'%s\' contains nested items. First item selected by default ', item)
         else:
