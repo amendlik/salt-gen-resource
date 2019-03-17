@@ -338,7 +338,7 @@ class ResourceGenerator(object):
                 else:
                     log.warning('Requested grain \'%s\' is not available on minion: %s', item, minion)
             except TypeError:
-                log.warning('Minion \'%s\' grain \'%s\' ignored because it contains nested items.', minion, item)
+                log.warning('Minion \'%s\' grain \'%s\' ignored because grain type is unsupported. ', minion, item)
         return attributes
 
     def _attribute_from_grain(self, item, grains):
@@ -352,7 +352,10 @@ class ResourceGenerator(object):
         if isinstance(value, six.string_types):
             if six.PY2:
                 value = value.encode('utf-8')
-        elif hasattr(value, '__iter__'):
+		elif isinstance(value, list):
+            value = value[0].encode('utf-8')
+            log.warning('Grain \'%s\' contains nested items. First item selected by default ', item)
+        else:
             raise TypeError
         return key, value
 
