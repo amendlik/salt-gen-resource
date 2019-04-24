@@ -298,7 +298,7 @@ def load_test_data(dataset):
     filename = path.join(path.dirname(path.abspath(__file__)), 'tests', 'data', dataset)
     with open(filename, 'r') as stream:
         try:
-            return yaml.load(stream)
+            return yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
 
