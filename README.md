@@ -4,17 +4,17 @@ A script that uses Mine function of SaltStack to populate nodes
 in Rundeck. In addition to providing nodes, any Salt Grain can be
 added as a node attribute or tag.
 
-You must have a Salt Minion running on the Rundeck server.
+This script requires that a Salt Minion be running on the Rundeck server.
 
 ## Installation
 
 ### Resource Model Provider Script
 
-The only file required from this repository is [SaltGenResource.py](SaltGenResource.py). Copy it to your Rundeck server, in the location where your keep your Rundeck configuration scripts (e.g. `/opt/rundeck/scripts`). You can also clone this entire repository to your scripts location to make future updates easy.
+The only file required from this repository is [SaltGenResource.py](SaltGenResource.py). Copy it to the Rundeck server, in the location where Rundeck configuration scripts are stored (e.g. `/opt/rundeck/scripts`). As an alternative, this entire repository can be cloned to make future updates easy.
 
 ### Sudo policy
 
-Because the script is essentially running the Salt Minion, it must be run as root. Add this to your sudoers policy to permit Rundeck to run it:
+Because the script is essentially running the Salt Minion, it must be run as root. Add the following snippet to the sudoers policy to permit Rundeck to run it. Change the path to match the installed location of the script.
 ```
 Cmnd_Alias SALT_GEN_RESOURCE = /opt/rundeck/scripts/salt-gen-resource/SaltGenResource.py
 rundeck ALL=(root) NOPASSWD: SALT_GEN_RESOURCE
@@ -25,11 +25,11 @@ Defaults!SALT_GEN_RESOURCE !requiretty
 
 The project configuration can be edited through the web UI, or by editing the file on disk. The web UI is recommended for several reasons:
 
-1. It works whether you are using filesystem-backed projects or database-backed projects. If you are using database-backed projects, there is no file on disk to edit.
+1. It works whether using filesystem-backed projects or database-backed projects. If using database-backed projects, there is no file on disk to edit.
 2. It knows the location of the file. Rundeck can be installed in a variety of configurations, and all of them place configuration files in different places.
-3. It handles string escaping. If you insist on editing the file directly, you must follow the escaping rules of Java `.properties` files.
+3. It handles string escaping. If editing the file directly, the escaping rules of Java `.properties` files must be followed.
 
-Edit your Rundeck project configuration to include a new node source script. Change the `file` parameter to match the location where you installed `SaltGenResource.py`.
+Edit the Rundeck project configuration to include a new node source script. Change the `file` parameter to match the installed location of `SaltGenResource.py`.
 ```
 resources.source.2.config.args=-G virtual:kvm
 resources.source.2.config.file=/opt/rundeck/scripts/SaltGenResource.py
@@ -60,7 +60,7 @@ See the Salt Mine [online documentation](https://docs.saltstack.com/en/latest/to
 
 ## Configuration
 
-Running `SaltGenResource.py --help` will tell you just about everything you need to know:
+For usage instructions, run `SaltGenResource.py --help`:
 ```
 Usage: SaltGenResource.py [options] <target> [<attr>=<value> ...]
 
@@ -177,7 +177,7 @@ Node tags can be added by including the `--tags` argument. This is particularly 
 Requesting a tag for a grain that does not exist will emit a warning and continue without adding the tag.
 
 ### Mine Function
-By default, this script depends on Salt Mine having access to `grains.items` on every minion. If you have an alias in place for that function, specify it using the `--mine-function` option.
+By default, this script depends on Salt Mine having access to `grains.items` on every minion. If an alias is configured for that function, specify it using the `--mine-function` option.
 
 ### Static Attributes
 Additional attributes that are not provided by a grain can be specified by including key value pairs on the command line, after the targeting expression. These static attributes will be added to all generated node resources. For example:
