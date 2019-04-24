@@ -8,5 +8,13 @@ grains:
   cpuarch: x86_64
   os: RedHat
   os_family: RedHat
+  colors:
+    - red
+    - green
+  instruments:
+    - - oboe
+      - tuba
+    - - violin
+      - cello
 selected_target_option: glob
 tgt: '*'
