@@ -169,7 +169,7 @@ resources.source.2.config.args=*
 ```
 
 ### Node Attributes
-Node attributes can be added by including the `--attributes` argument. This can be used to add any grain value as a node attribute in Rundeck. Note that the value of the grain must be a single value (not a list or dictionary). Nested grains can be specified using `:` as a delimiter, such as `--attributes locale_info:defaultlanguage`. The delimiter can be changed using the `--delimiter` command-line argument.
+Node attributes can be added by including the `--attributes` argument. This can be used to add any grain value as a node attribute in Rundeck. Note that the value of the grain must not be a dictionary. If the requested grain is a list, the first element of the list will be used as the attribute value. Nested grains can be specified using `:` as a delimiter, such as `--attributes locale_info:defaultlanguage`. The delimiter can be changed using the `--delimiter` command-line argument.
 Requesting an attribute for a grain that does not exist will emit a warning and continue without adding the attribute.
 
 ### Node Tags
