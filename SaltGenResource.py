@@ -360,18 +360,20 @@ class ResourceGenerator(object):
         """
         Process different value types, recursing lists if necessary
         """
-        result = value
+        if isinstance(value, six.string_types):
+            if six.PY2:
+                return value.encode('utf-8')
+            else:
+                return value
 
-        if hasattr(value, '__iter__'):
+        elif hasattr(value, '__iter__'):
             if isinstance(value, list) and len(value) > 0:
-                result = ResourceGenerator._get_grain_value(value[0])
+                return ResourceGenerator._get_grain_value(value[0])
             else:
                 raise TypeError
 
-        if isinstance(value, six.string_types) and six.PY2:
-            result = value.encode('utf-8')
-
-        return result
+        else:
+            return value
 
     def _create_tags(self, minion, grains):
         """
