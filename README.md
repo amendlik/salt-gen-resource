@@ -197,6 +197,10 @@ In addition to the normal, [documented](https://docs.saltstack.com/en/latest/ref
 ### Example
 A more complete example might look like this:
 ```
+resources.source.2.type=script
+resources.source.2.config.format=resourceyaml
+resources.source.2.config.interpreter=sudo
+resources.source.2.config.file=/opt/rundeck/scripts/SaltGenResource.py
 resources.source.2.config.args=--mine-function allgrains --attributes domain,selinux:enabled --tags roles,init -S 10.0.1.0/24 username=rduser
 ```
 1. Use the mine function alias `allgrains` instead of `grains.items`.
