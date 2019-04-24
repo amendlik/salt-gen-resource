@@ -338,7 +338,7 @@ class ResourceGenerator(object):
                 else:
                     log.warning('Requested grain \'%s\' is not available on minion: %s', item, minion)
             except TypeError:
-                log.warning('Minion \'%s\' grain \'%s\' ignored because it contains nested items.', minion, item)
+                log.warning('Minion \'%s\' grain \'%s\' ignored because grain type is unsupported. ', minion, item)
         return attributes
 
     def _attribute_from_grain(self, item, grains):
@@ -349,12 +349,31 @@ class ResourceGenerator(object):
         value = datautils.traverse_dict_and_list(
             grains, item, default='',
             delimiter=self.options.delimiter)
+
+        if isinstance(value, list):
+            log.warning('Grain \'%s\' is a list. First item selected by default.', item)
+
+        return key, ResourceGenerator._get_grain_value(value)
+
+    @staticmethod
+    def _get_grain_value(value):
+        """
+        Process different value types, recursing lists if necessary
+        """
         if isinstance(value, six.string_types):
             if six.PY2:
-                value = value.encode('utf-8')
+                return value.encode('utf-8')
+            else:
+                return value
+
         elif hasattr(value, '__iter__'):
-            raise TypeError
-        return key, value
+            if isinstance(value, list) and len(value) > 0:
+                return ResourceGenerator._get_grain_value(value[0])
+            else:
+                raise TypeError
+
+        else:
+            return value
 
     def _create_tags(self, minion, grains):
         """
