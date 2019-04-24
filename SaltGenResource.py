@@ -349,19 +349,29 @@ class ResourceGenerator(object):
         value = datautils.traverse_dict_and_list(
             grains, item, default='',
             delimiter=self.options.delimiter)
-        if isinstance(value, six.string_types):
-            if six.PY2:
-                value = value.encode('utf-8')
-        elif isinstance(value, list):
-            if isinstance(value[0], six.string_types):
-                if six.PY2:
-                    value = value[0].encode('utf-8')
-                    log.warning('Grain \'%s\' contains nested items. First item selected by default ', item)
+
+        if isinstance(value, list):
+            log.warning('Grain \'%s\' is a list. First item selected by default.', item)
+
+        return key, ResourceGenerator._get_grain_value(value)
+
+    @staticmethod
+    def _get_grain_value(value):
+        """
+        Process different value types, recursing lists if necessary
+        """
+        result = value
+
+        if hasattr(value, '__iter__'):
+            if isinstance(value, list) and len(value) > 0:
+                result = ResourceGenerator._get_grain_value(value[0])
             else:
                 raise TypeError
-        else:
-            raise TypeError
-        return key, value
+
+        if isinstance(value, six.string_types) and six.PY2:
+            result = value.encode('utf-8')
+
+        return result
 
     def _create_tags(self, minion, grains):
         """
