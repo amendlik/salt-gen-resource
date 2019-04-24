@@ -5,6 +5,14 @@ linmin:
   kernelrelease: 4.4.0-75-generic
   os: RedHat
   os_family: RedHat
+  colors:
+    - red
+    - green
+  instruments:
+    - - oboe
+      - tuba
+    - - violin
+      - cello
 winmin:
   cpuarch: AMD64
   fqdn: minion2.example.com
@@ -12,3 +20,11 @@ winmin:
   kernelrelease: 6.3.9600
   os: Windows
   os_family: Windows
+  colors:
+    - red
+    - green
+  instruments:
+    - - oboe
+      - tuba
+    - - violin
+      - cello

@@ -84,6 +84,42 @@ class TestNodeGenerator(TestCase):
                 self._test_attributes(resources, parser.options.attributes)
                 caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
 
+    def test_list_attribute(self):
+        with patch('SaltGenResource.SaltNodesCommandParser', MockParser()) as parser:
+            with patch('salt.client.Caller', MockCaller()) as caller:
+
+                call_kwargs = dict.copy(self.default_kwargs)
+                parser.options.include_server_node = self.include_server_node
+                call_kwargs['exclude_minion'] = self.include_server_node
+
+                parser.options.attributes = ['colors']
+                resources = ResourceGenerator().as_dict()
+
+                self._test_required_attributes(resources)
+                self._test_attributes(resources, parser.options.attributes)
+                caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
+
+                for minion, resource in six.iteritems(resources):
+                    self.assertEqual(resource['colors'], 'red')
+
+    def test_nested_list_attribute(self):
+        with patch('SaltGenResource.SaltNodesCommandParser', MockParser()) as parser:
+            with patch('salt.client.Caller', MockCaller()) as caller:
+
+                call_kwargs = dict.copy(self.default_kwargs)
+                parser.options.include_server_node = self.include_server_node
+                call_kwargs['exclude_minion'] = self.include_server_node
+
+                parser.options.attributes = ['instruments']
+                resources = ResourceGenerator().as_dict()
+
+                self._test_required_attributes(resources)
+                self._test_attributes(resources, parser.options.attributes)
+                caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
+
+                for minion, resource in six.iteritems(resources):
+                    self.assertEqual(resource['instruments'], 'oboe')
+
     def test_single_tag(self):
         with patch('SaltGenResource.SaltNodesCommandParser', MockParser()) as parser:
             with patch('salt.client.Caller', MockCaller()) as caller:
