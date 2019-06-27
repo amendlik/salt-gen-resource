@@ -31,11 +31,11 @@ The project configuration can be edited through the web UI, or by editing the fi
 
 Edit the Rundeck project configuration to include a new node source script. Change the `file` parameter to match the installed location of `SaltGenResource.py`.
 ```
-resources.source.2.config.args=-G virtual:kvm
-resources.source.2.config.file=/opt/rundeck/scripts/SaltGenResource.py
+resources.source.2.type=script
 resources.source.2.config.format=resourceyaml
 resources.source.2.config.interpreter=sudo
-resources.source.2.type=script
+resources.source.2.config.file=/opt/rundeck/scripts/SaltGenResource.py
+resources.source.2.config.args=-G virtual:kvm
 ```
 **Note:** Be careful about deleting an existing node source from the configuration file. One of those sources usually provides the 'server node', which is necessary for certain Rundeck workflows. The server node is **not** provided by `SaltGenResource.py` by default. 
 Add additional node sources as necessary, by using another number in the properties (resources.source._#_.config), or configure `SaltGenResource.py` to provide the server node with `--include-server-node`.
