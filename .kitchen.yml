@@ -2,8 +2,9 @@
 <% @salt_versions = [
   ['stable', '2016.11.10'],
   ['stable', '2017.7.8'],
-  ['stable', '2018.3.3'],
-  ['git', 'v2019.2.0rc1']
+  ['stable', '2018.3.4'],
+  ['stable', '2019.2.3'],
+  ['stable', '3000']
 ] %>
 
 driver:
