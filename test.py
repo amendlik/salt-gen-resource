@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import yaml
-import six
 import os.path as path
 import optparse
+from unittest import TestCase, TextTestRunner, main
+
+import six
+import yaml
 import salt.version as version
 from SaltGenResource import ResourceGenerator, SaltNodesCommandParser
-from unittest import TestCase, TextTestRunner, main
 
 if six.PY2:
     from mock import patch, Mock
 else:
     from unittest.mock import patch, Mock
 
+# pylint: disable=protected-access,missing-function-docstring
 class TestMapping(TestCase):
 
     def test_os_family_map1(self):
@@ -102,7 +104,7 @@ class TestNodeGenerator(TestCase):
                 self._test_attributes(resources, parser.options.attributes)
                 caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
 
-                for minion, resource in six.iteritems(resources):
+                for _, resource in six.iteritems(resources):
                     self.assertEqual(resource['colors'], 'red')
 
     def test_nested_list_attribute(self):
@@ -120,7 +122,7 @@ class TestNodeGenerator(TestCase):
                 self._test_attributes(resources, parser.options.attributes)
                 caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
 
-                for minion, resource in six.iteritems(resources):
+                for _, resource in six.iteritems(resources):
                     self.assertEqual(resource['instruments'], 'oboe')
 
     def test_single_tag(self):
@@ -164,7 +166,7 @@ class TestNodeGenerator(TestCase):
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, ['color', 'pattern'])
 
-                for host, attributes in six.iteritems(resources):
+                for host, _ in six.iteritems(resources):
                     self.assertEqual(resources[host]['color'], 'yellow')
                     self.assertEqual(resources[host]['pattern'], 'polka dot')
 
@@ -183,7 +185,7 @@ class TestNodeGenerator(TestCase):
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, ['username'])
 
-                for host, attributes in six.iteritems(resources):
+                for host, _ in six.iteritems(resources):
                     if host == ResourceGenerator._server_node_name:
                         self.assertEqual(resources[host]['username'], parser.options.server_node_user)
                     else:
@@ -237,7 +239,7 @@ class TestNodeGenerator(TestCase):
     def _test_attributes(self, resources, needed):
         self.assertTrue(len(resources) > 0)
         self.assertNotIn('!!', ResourceGenerator._dump_yaml(resources))
-        for host, attributes in six.iteritems(resources):
+        for _, attributes in six.iteritems(resources):
             for attribute in needed:
                 self.assertIn(attribute, attributes)
                 self.assertIsNotNone(attributes[attribute])
@@ -246,7 +248,7 @@ class TestNodeGenerator(TestCase):
     def _test_tags(self, resources, needed):
         self.assertTrue(len(resources) > 0)
         self.assertNotIn('!!', ResourceGenerator._dump_yaml(resources))
-        for host, attributes in six.iteritems(resources):
+        for _, attributes in six.iteritems(resources):
             self.assertIn('tags', attributes)
             self.assertIsNotNone(attributes['tags'])
             self.assertEqual(len(attributes['tags']), len(needed))
@@ -274,6 +276,7 @@ class MockParser:
         self.args = ''
 
     # noinspection PyUnusedLocal
+    # pylint: disable=unused-argument
     def parse_args(self, *args, **kwargs):
         return self.options, self.args
 
@@ -281,13 +284,13 @@ class MockParser:
         pass
 
 
-class MockMinion:
+class MockMinion: # pylint: disable=too-few-public-methods
 
     def __init__(self):
         self.opts = load_test_data('config.yaml')
 
 
-class MockCaller:
+class MockCaller: # pylint: disable=too-few-public-methods
 
     def __call__(self, *args, **kwargs):
         return self

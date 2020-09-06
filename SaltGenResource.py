@@ -1,6 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""Salt Resource Generator for Rundeck
+
+A script that uses Mine function of SaltStack to populate nodes
+in Rundeck. In addition to providing nodes, any Salt Grain can be
+added as a node attribute or tag.
+
+"""
+
+import logging
+import os
+import sys
+import six
+import yaml
+
 import salt.client
 import salt.utils
 import salt.grains
@@ -10,17 +24,12 @@ import salt.ext.six as six
 import salt.syspaths as syspaths
 import salt.config as config
 import salt.utils.args as saltargs
-import yaml
-import logging
-import os
-import sys
-import six
 
 # Adjust module import depending on Salt version
 if version.__saltstack_version__ >= version.SaltStackVersion.from_name('Oxygen'):
     import salt.utils.data as datautils
 else:
-    import salt.utils as datautils
+    import salt.utils as datautils # pylint: disable=reimported
 
 log = logging.getLogger('salt-gen-resource')
 
@@ -53,6 +62,7 @@ class SaltNodesCommandParser(
     ignore_attributes = ['hostname', 'osName', 'osVersion', 'osFamily', 'osArch', 'tags']
     ignore_servernode = ['username', 'description']
 
+    # pylint: disable=no-member
     def _mixin_setup(self):
         """
         Define arguments specific to SaltGenResource
@@ -139,6 +149,13 @@ class SaltNodesCommandParser(
                                    if x not in self.ignore_attributes]
 
     def setup_config(self):
+        """Configure file-based logging
+
+        This method is called by the base class to modify minion
+        configuration options. It is used here to configure a
+        log file from the minion config file.
+
+        """
         config_opts = config.minion_config(
             self.get_config_file_path(),
             cache_minion_id=True,
@@ -180,7 +197,7 @@ class SaltNodesCommandParser(
             setattr(parser.values, option.dest, set(value.split()))
 
 
-class ResourceGenerator(object):
+class ResourceGenerator():
     """
     Provide a dictionary of node definitions.
     When written to stdout in YAML format, this dictionary is consumable
@@ -195,6 +212,7 @@ class ResourceGenerator(object):
 
     resources = {}
 
+    # pylint: disable=no-member
     def __init__(self, args=None):
         """
         Parse command arguments
@@ -320,7 +338,6 @@ class ResourceGenerator(object):
         if not self.resources:
             log.warning('No resources returned.')
 
-        return
 
     def _create_attributes(self, minion, grains):
         """
@@ -363,17 +380,14 @@ class ResourceGenerator(object):
         if isinstance(value, six.string_types):
             if six.PY2:
                 return value.encode('utf-8')
-            else:
-                return value
+            return value
 
-        elif hasattr(value, '__iter__'):
+        if hasattr(value, '__iter__'):
             if isinstance(value, list) and len(value) > 0:
                 return ResourceGenerator._get_grain_value(value[0])
-            else:
-                raise TypeError
+            raise TypeError
 
-        else:
-            return value
+        return value
 
     def _create_tags(self, minion, grains):
         """
@@ -431,8 +445,7 @@ class ResourceGenerator(object):
         """
         if value in cls._os_family_map:
             return cls._os_family_map[value]
-        else:
-            return value
+        return value
 
     @classmethod
     def _os_arch(cls, value):
@@ -441,8 +454,7 @@ class ResourceGenerator(object):
         """
         if value in cls._os_arch_map:
             return cls._os_arch_map[value]
-        else:
-            return value
+        return value
 
 
 if __name__ == '__main__':
