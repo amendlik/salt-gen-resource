@@ -28,8 +28,10 @@ import salt.utils.args as saltargs
 # Adjust module import depending on Salt version
 if version.__saltstack_version__ >= version.SaltStackVersion.from_name("Oxygen"):
     import salt.utils.data as datautils
+    import salt.utils.stringutils as stringutils
 else:
     import salt.utils as datautils  # pylint: disable=reimported
+    import salt.utils as stringutils  # pylint: disable=reimported
 
 LOG = logging.getLogger("salt-gen-resource")
 
@@ -496,10 +498,7 @@ class ResourceGenerator:
         elif not value:
             pass
         elif isinstance(value, six.string_types):
-            if six.PY2:
-                tags.add(value.encode("utf-8"))
-            else:
-                tags.add(value)
+            tags.add(stringutils.to_unicode(value))
         elif isinstance(value, six.binary_type):
             tags.add(value)
         elif isinstance(value, dict):
@@ -508,10 +507,8 @@ class ResourceGenerator:
             for nesteditem in value:
                 if hasattr(nesteditem, "__iter__"):
                     pass
-                elif isinstance(nesteditem, six.string_types):
-                    tags.add(nesteditem.encode("utf-8"))
                 else:
-                    tags.add(nesteditem)
+                    tags.add(stringutils.to_unicode(nesteditem))
         else:
             tags.add(value)
         return tags
