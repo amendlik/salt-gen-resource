@@ -26,41 +26,51 @@ import salt.config as config
 import salt.utils.args as saltargs
 
 # Adjust module import depending on Salt version
-if version.__saltstack_version__ >= version.SaltStackVersion.from_name('Oxygen'):
+if version.__saltstack_version__ >= version.SaltStackVersion.from_name("Oxygen"):
     import salt.utils.data as datautils
 else:
-    import salt.utils as datautils # pylint: disable=reimported
+    import salt.utils as datautils  # pylint: disable=reimported
 
-log = logging.getLogger('salt-gen-resource')
+LOG = logging.getLogger("salt-gen-resource")
 
 
 # noinspection PyClassHasNoInit
+# pylint: disable=no-init
 class SaltNodesCommandParser(
     six.with_metaclass(
         salt.utils.parsers.OptionParserMeta,
         salt.utils.parsers.OptionParser,
         salt.utils.parsers.ConfigDirMixIn,
         salt.utils.parsers.ExtendedTargetOptionsMixIn,
-        salt.utils.parsers.LogLevelMixIn)):
+        salt.utils.parsers.LogLevelMixIn,
+    )
+):
     """
     Argument parser used by SaltGenResource to generate
     Rundeck node definitions.
     """
 
-    usage = '%prog [options] <target> [<attr>=<value> ...]'
-    description = 'Salt Mine node source for Rundeck.'
+    usage = "%prog [options] <target> [<attr>=<value> ...]"
+    description = "Salt Mine node source for Rundeck."
     epilog = None
 
-    _config_filename_ = 'minion'
-    _logfile_config_setting_name_ = 'resource_generator_logfile'
-    _logfile_loglevel_config_setting_name_ = 'resource_generator_log_level_logfile'
-    _default_logging_logfile_ = os.path.join(syspaths.LOGS_DIR, 'resource-generator')
+    _config_filename_ = "minion"
+    _logfile_config_setting_name_ = "resource_generator_logfile"
+    _logfile_loglevel_config_setting_name_ = "resource_generator_log_level_logfile"
+    _default_logging_logfile_ = os.path.join(syspaths.LOGS_DIR, "resource-generator")
     _setup_mp_logging_listener_ = False
-    _default_logging_level_ = 'warning'
+    _default_logging_level_ = "warning"
 
     # Ignore requests to provide reserved attribute names
-    ignore_attributes = ['hostname', 'osName', 'osVersion', 'osFamily', 'osArch', 'tags']
-    ignore_servernode = ['username', 'description']
+    ignore_attributes = [
+        "hostname",
+        "osName",
+        "osVersion",
+        "osFamily",
+        "osArch",
+        "tags",
+    ]
+    ignore_servernode = ["username", "description"]
 
     # pylint: disable=no-member
     def _mixin_setup(self):
@@ -69,48 +79,63 @@ class SaltNodesCommandParser(
         """
 
         self.add_option(
-            '-m', '--mine-function',
-            default='grains.items',
+            "-m",
+            "--mine-function",
+            default="grains.items",
             type=str,
-            help=('Set the function name for Salt Mine to execute '
-                  'to retrieve grains. Default value is grains.items '
-                  'but this could be different if mine function '
-                  'aliases are used.')
+            help=(
+                "Set the function name for Salt Mine to execute "
+                "to retrieve grains. Default value is grains.items "
+                "but this could be different if mine function "
+                "aliases are used."
+            ),
         )
         self.add_option(
-            '-s', '--include-server-node',
+            "-s",
+            "--include-server-node",
             action="store_true",
-            help=('Include the Rundeck server node in the output. '
-                  'The server node is required for some workflows '
-                  'and must be provided by exactly one resource provider.')
+            help=(
+                "Include the Rundeck server node in the output. "
+                "The server node is required for some workflows "
+                "and must be provided by exactly one resource provider."
+            ),
         )
         self.add_option(
-            '-u', '--server-node-user',
+            "-u",
+            "--server-node-user",
             type=str,
-            default='rundeck',
-            help=('Specify the user name to use when running jobs on the '
-                  'server node. This would typically be the same user that '
-                  'the Rundeck service is running as. Default: \'rundeck\'.')
+            default="rundeck",
+            help=(
+                "Specify the user name to use when running jobs on the "
+                "server node. This would typically be the same user that "
+                "the Rundeck service is running as. Default: 'rundeck'."
+            ),
         )
         self.add_option(
-            '-a', '--attributes',
-            type=str,
-            default=[],
-            action='callback',
-            callback=self.set_callback,
-            help=('Create Rundeck node attributes from the values of grains. '
-                  'Multiple grains may be specified '
-                  'when separated by a space or comma.')
-        )
-        self.add_option(
-            '-t', '--tags',
+            "-a",
+            "--attributes",
             type=str,
             default=[],
-            action='callback',
+            action="callback",
             callback=self.set_callback,
-            help=('Create Rundeck node tags from the values of grains. '
-                  'Multiple grains may be specified '
-                  'when separated by a space or comma.')
+            help=(
+                "Create Rundeck node attributes from the values of grains. "
+                "Multiple grains may be specified "
+                "when separated by a space or comma."
+            ),
+        )
+        self.add_option(
+            "-t",
+            "--tags",
+            type=str,
+            default=[],
+            action="callback",
+            callback=self.set_callback,
+            help=(
+                "Create Rundeck node tags from the values of grains. "
+                "Multiple grains may be specified "
+                "when separated by a space or comma."
+            ),
         )
 
     def _mixin_after_parsed(self):
@@ -118,35 +143,36 @@ class SaltNodesCommandParser(
         Validate and process arguments
         """
         if not os.path.isfile(self.get_config_file_path()):
-            log.critical("Configuration file not found")
+            LOG.critical("Configuration file not found")
             sys.exit(-1)
 
         # Extract targeting expression
         try:
             if self.options.list:
-                if ',' in self.args[0]:
-                    self.config['tgt'] = \
-                        self.args[0].replace(' ', '').split(',')
+                if "," in self.args[0]:
+                    self.config["tgt"] = self.args[0].replace(" ", "").split(",")
                 else:
-                    self.config['tgt'] = self.args[0].split()
+                    self.config["tgt"] = self.args[0].split()
             else:
-                self.config['tgt'] = self.args[0]
+                self.config["tgt"] = self.args[0]
         except IndexError:
-            self.exit(42, ('\nCannot execute command without '
-                           'defining a target.\n\n'))
+            self.exit(
+                42, ("\nCannot execute command without " "defining a target.\n\n")
+            )
 
         if self.options.log_level:
-            self.config['log_level'] = self.options.log_level
+            self.config["log_level"] = self.options.log_level
         else:
-            self.config['log_level'] = self._default_logging_level_
+            self.config["log_level"] = self._default_logging_level_
 
         # Set default targeting option
-        if self.config['selected_target_option'] is None:
-            self.config['selected_target_option'] = 'glob'
+        if self.config["selected_target_option"] is None:
+            self.config["selected_target_option"] = "glob"
 
         # Remove conflicting grains
-        self.options.attributes = [x for x in self.options.attributes
-                                   if x not in self.ignore_attributes]
+        self.options.attributes = [
+            x for x in self.options.attributes if x not in self.ignore_attributes
+        ]
 
     def setup_config(self):
         """Configure file-based logging
@@ -159,26 +185,36 @@ class SaltNodesCommandParser(
         config_opts = config.minion_config(
             self.get_config_file_path(),
             cache_minion_id=True,
-            ignore_config_errors=False)
+            ignore_config_errors=False,
+        )
 
         # Make file based logging work
-        if getattr(self.options, self._logfile_config_setting_name_, 'None') is None:
+        if getattr(self.options, self._logfile_config_setting_name_, "None") is None:
 
             # Copy the default log file path into the config dict
             if self._logfile_config_setting_name_ not in config_opts:
-                config_opts[self._logfile_config_setting_name_] = self._default_logging_logfile_
+                config_opts[
+                    self._logfile_config_setting_name_
+                ] = self._default_logging_logfile_
 
             # Prepend the root_dir setting to the log file path
             config.prepend_root_dir(config_opts, [self._logfile_config_setting_name_])
 
             # Copy the altered path back to the options or it will revert to the default
-            setattr(self.options, self._logfile_config_setting_name_, config_opts[self._logfile_config_setting_name_])
+            setattr(
+                self.options,
+                self._logfile_config_setting_name_,
+                config_opts[self._logfile_config_setting_name_],
+            )
 
         else:
             # Copy the provided log file path into the config dict
             if self._logfile_config_setting_name_ not in config_opts:
-                config_opts[self._logfile_config_setting_name_] = \
-                    getattr(self.options, self._logfile_config_setting_name_, self._default_logging_logfile_)
+                config_opts[self._logfile_config_setting_name_] = getattr(
+                    self.options,
+                    self._logfile_config_setting_name_,
+                    self._default_logging_logfile_,
+                )
 
         return config_opts
 
@@ -190,14 +226,13 @@ class SaltNodesCommandParser(
         This callback converts comma-delimited or space-delimited strings
         to list types.
         """
-        if ',' in value:
-            setattr(parser.values, option.dest,
-                    set(value.replace(' ', '').split(',')))
+        if "," in value:
+            setattr(parser.values, option.dest, set(value.replace(" ", "").split(",")))
         else:
             setattr(parser.values, option.dest, set(value.split()))
 
 
-class ResourceGenerator():
+class ResourceGenerator:
     """
     Provide a dictionary of node definitions.
     When written to stdout in YAML format, this dictionary is consumable
@@ -205,10 +240,10 @@ class ResourceGenerator():
     """
 
     # Define maps from grain values into expected strings
-    _os_family_map = {'Linux': 'unix', 'Windows': 'windows'}
-    _os_arch_map = {'x86_64': 'amd64', 'AMD64': 'amd64'}
-    _server_node_name = 'localhost'
-    _mine_func = 'mine.get'
+    _os_family_map = {"Linux": "unix", "Windows": "windows"}
+    _os_arch_map = {"x86_64": "amd64", "AMD64": "amd64"}
+    _server_node_name = "localhost"
+    _mine_func = "mine.get"
 
     resources = {}
 
@@ -222,7 +257,7 @@ class ResourceGenerator():
         parser.parse_args(args)
 
         # Removing 'conf_file' prevents the file from being re-read when rendering grains
-        parser.config.pop('conf_file', None)
+        parser.config.pop("conf_file", None)
 
         # Parse the static attribute definitions
         self.static = saltargs.parse_input(parser.args, False)[1]
@@ -267,77 +302,94 @@ class ResourceGenerator():
         caller = salt.client.Caller(c_path=None, mopts=self.config)
 
         # Account for an API change in Salt Nitrogen (2017.7)
-        kwargs = {'exclude_minion': self.options.include_server_node}
-        if version.__saltstack_version__ >= version.SaltStackVersion.from_name('Nitrogen'):
-            kwargs['tgt_type'] = self.config['selected_target_option']
+        kwargs = {"exclude_minion": self.options.include_server_node}
+        if version.__saltstack_version__ >= version.SaltStackVersion.from_name(
+            "Nitrogen"
+        ):
+            kwargs["tgt_type"] = self.config["selected_target_option"]
         else:
-            kwargs['expr_form'] = self.config['selected_target_option']
+            kwargs["expr_form"] = self.config["selected_target_option"]
 
         # Call Salt Mine to retrieve grains for all nodes
-        log.debug(
-            'Calling %s with target: \'%s\' type: \'%s\'',
-            self._mine_func, self.config['tgt'], self.config['selected_target_option'])
-        mine = caller.cmd(
+        LOG.debug(
+            "Calling %s with target: '%s' type: '%s'",
             self._mine_func,
-            self.config['tgt'],
-            self.options.mine_function,
-            **kwargs)
-        log.debug(
-            'Salt Mine function \'%s\' returned %d minion%s',
-            self._mine_func, len(mine), '' if len(mine) == 1 else 's')
+            self.config["tgt"],
+            self.config["selected_target_option"],
+        )
+        mine = caller.cmd(
+            self._mine_func, self.config["tgt"], self.options.mine_function, **kwargs
+        )
+        LOG.debug(
+            "Salt Mine function '%s' returned %d minion%s",
+            self._mine_func,
+            len(mine),
+            "" if len(mine) == 1 else "s",
+        )
 
         # Special handling for server node
         if self.options.include_server_node is True:
             # Map required node attributes from grains
-            local_grains = caller.sminion.opts['grains']
+            local_grains = caller.sminion.opts["grains"]
             self.resources[self._server_node_name] = {
-                'hostname': self._server_node_name,
-                'description': 'Rundeck server node',
-                'username': self.options.server_node_user,
-                'osName': local_grains['kernel'],
-                'osVersion': local_grains['kernelrelease'],
-                'osFamily': self._os_family(local_grains['kernel']),
-                'osArch': self._os_arch(local_grains['cpuarch'])
+                "hostname": self._server_node_name,
+                "description": "Rundeck server node",
+                "username": self.options.server_node_user,
+                "osName": local_grains["kernel"],
+                "osVersion": local_grains["kernelrelease"],
+                "osFamily": self._os_family(local_grains["kernel"]),
+                "osArch": self._os_arch(local_grains["cpuarch"]),
             }
             # Create additional attributes from grains
             self.resources[self._server_node_name].update(
-                self._create_attributes(self._server_node_name, local_grains))
+                self._create_attributes(self._server_node_name, local_grains)
+            )
 
             # Create static attributes
-            self.resources[self._server_node_name].update({
-                k: v for k, v in six.iteritems(self.static)
-                if k not in SaltNodesCommandParser.ignore_attributes + SaltNodesCommandParser.ignore_servernode})
+            self.resources[self._server_node_name].update(
+                {
+                    k: v
+                    for k, v in six.iteritems(self.static)
+                    if k
+                    not in SaltNodesCommandParser.ignore_attributes
+                    + SaltNodesCommandParser.ignore_servernode
+                }
+            )
 
             # Create tags from grains
             tags = self._create_tags(self._server_node_name, local_grains)
             if len(tags) > 0:
-                self.resources[self._server_node_name]['tags'] = tags
+                self.resources[self._server_node_name]["tags"] = tags
 
         # Map grains into a Rundeck resource dict
         for minion, minion_grains in six.iteritems(mine):
             # Map required node attributes from grains
             self.resources[minion] = {
-                'hostname': minion_grains['fqdn'],
-                'osName': minion_grains['kernel'],
-                'osVersion': minion_grains['kernelrelease'],
-                'osFamily': self._os_family(minion_grains['kernel']),
-                'osArch': self._os_arch(minion_grains['cpuarch'])
+                "hostname": minion_grains["fqdn"],
+                "osName": minion_grains["kernel"],
+                "osVersion": minion_grains["kernelrelease"],
+                "osFamily": self._os_family(minion_grains["kernel"]),
+                "osArch": self._os_arch(minion_grains["cpuarch"]),
             }
             # Create additional attributes from grains
             self.resources[minion].update(
-                self._create_attributes(minion, minion_grains))
+                self._create_attributes(minion, minion_grains)
+            )
             # Create static attributes
-            self.resources[minion].update({
-                k: v for k, v in six.iteritems(self.static)
-                if k not in SaltNodesCommandParser.ignore_attributes})
+            self.resources[minion].update(
+                {
+                    k: v
+                    for k, v in six.iteritems(self.static)
+                    if k not in SaltNodesCommandParser.ignore_attributes
+                }
+            )
             # Create tags from grains
             tags = self._create_tags(minion, minion_grains)
             if len(tags) > 0:
-                self.resources[minion]['tags'] = tags
+                self.resources[minion]["tags"] = tags
 
         if not self.resources:
-            log.warning('No resources returned.')
-
+            LOG.warning("No resources returned.")
 
     def _create_attributes(self, minion, grains):
         """
@@ -348,27 +400,39 @@ class ResourceGenerator():
             try:
                 key, value = self._attribute_from_grain(item, grains)
                 if value:
-                    log.debug(
-                        'Adding attribute for minion: \'%s\' grain: \'%s\', attribute: \'%s\', value: \'%s\'',
-                        minion, item, key, value)
+                    LOG.debug(
+                        "Adding attribute for minion: '%s' grain: '%s', attribute: '%s', value: '%s'",
+                        minion,
+                        item,
+                        key,
+                        value,
+                    )
                     attributes[key] = value
                 else:
-                    log.warning('Requested grain \'%s\' is not available on minion: %s', item, minion)
+                    LOG.warning(
+                        "Requested grain '%s' is not available on minion: %s",
+                        item,
+                        minion,
+                    )
             except TypeError:
-                log.warning('Minion \'%s\' grain \'%s\' ignored because grain type is unsupported. ', minion, item)
+                LOG.warning(
+                    "Minion '%s' grain '%s' ignored because grain type is unsupported. ",
+                    minion,
+                    item,
+                )
         return attributes
 
     def _attribute_from_grain(self, item, grains):
         """
         Provide the value for a single attribute from a grain
         """
-        key = item.replace(':', '_')
+        key = item.replace(":", "_")
         value = datautils.traverse_dict_and_list(
-            grains, item, default='',
-            delimiter=self.options.delimiter)
+            grains, item, default="", delimiter=self.options.delimiter
+        )
 
         if isinstance(value, list):
-            log.warning('Grain \'%s\' is a list. First item selected by default.', item)
+            LOG.warning("Grain '%s' is a list. First item selected by default.", item)
 
         return key, ResourceGenerator._get_grain_value(value)
 
@@ -379,10 +443,10 @@ class ResourceGenerator():
         """
         if isinstance(value, six.string_types):
             if six.PY2:
-                return value.encode('utf-8')
+                return value.encode("utf-8")
             return value
 
-        if hasattr(value, '__iter__'):
+        if hasattr(value, "__iter__"):
             if isinstance(value, list) and len(value) > 0:
                 return ResourceGenerator._get_grain_value(value[0])
             raise TypeError
@@ -398,12 +462,25 @@ class ResourceGenerator():
             try:
                 new_tags = self._tags_from_grain(item, grains)
                 if not new_tags:
-                    log.warning('Requested grain \'%s\' is not available on minion: %s', item, minion)
+                    LOG.warning(
+                        "Requested grain '%s' is not available on minion: %s",
+                        item,
+                        minion,
+                    )
                 for tag in new_tags:
-                    log.debug('Adding tag for minion: \'%s\' grain: \'%s\', tag: \'%s\'', minion, item, tag)
+                    LOG.debug(
+                        "Adding tag for minion: '%s' grain: '%s', tag: '%s'",
+                        minion,
+                        item,
+                        tag,
+                    )
                     tags.add(tag)
             except TypeError:
-                log.warning('Minion \'%s\' grain \'%s\' ignored because it contains nested items.', minion, item)
+                LOG.warning(
+                    "Minion '%s' grain '%s' ignored because it contains nested items.",
+                    minion,
+                    item,
+                )
         return list(tags)
 
     def _tags_from_grain(self, item, grains):
@@ -412,26 +489,27 @@ class ResourceGenerator():
         """
         tags = set()
         value = datautils.traverse_dict_and_list(
-            grains, item, default=None, delimiter=self.options.delimiter)
+            grains, item, default=None, delimiter=self.options.delimiter
+        )
         if value is None:
             pass
         elif not value:
             pass
         elif isinstance(value, six.string_types):
             if six.PY2:
-                tags.add(value.encode('utf-8'))
+                tags.add(value.encode("utf-8"))
             else:
                 tags.add(value)
         elif isinstance(value, six.binary_type):
             tags.add(value)
         elif isinstance(value, dict):
             raise TypeError
-        elif hasattr(value, '__iter__'):
+        elif hasattr(value, "__iter__"):
             for nesteditem in value:
-                if hasattr(nesteditem, '__iter__'):
+                if hasattr(nesteditem, "__iter__"):
                     pass
                 elif isinstance(nesteditem, six.string_types):
-                    tags.add(nesteditem.encode('utf-8'))
+                    tags.add(nesteditem.encode("utf-8"))
                 else:
                     tags.add(nesteditem)
         else:
@@ -457,6 +535,6 @@ class ResourceGenerator():
         return value
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Print dict as YAML on stdout
     print(ResourceGenerator().as_yaml())
