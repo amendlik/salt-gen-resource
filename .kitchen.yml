@@ -1,10 +1,10 @@
 <% root_path='/tmp/kitchen' %>
 <% @salt_versions = [
-  ['stable', '2016.11.10'],
-  ['stable', '2017.7.8'],
-  ['stable', '2018.3.4'],
-  ['stable', '2019.2.3'],
-  ['stable', '3000']
+  ['python2', 'stable', '2019.2.5'],
+  ['python3', 'stable', '2019.2.5'],
+  ['python2', 'stable', '3000.3'],
+  ['python3', 'stable', '3000.3'],
+  ['python3', 'stable', '3001.1']
 ] %>
 
 driver:
@@ -50,12 +50,12 @@ provisioner:
 
 suites:
 <% @salt_versions.each do |version| %>
-  - name: '<%= version[1].gsub('.', '-') %>'
+  - name: '<%= version[0]%>-<%= version[2].gsub('.', '-') %>'
     provisioner:
-      salt_bootstrap_options: -X -n -p git -p python-pygit2 -p python-mock <%= version[0] %> <%= version[1] %>
+      salt_bootstrap_options: -x <%= version[0] %> -X -n -p git -p python-pygit2 -p python-mock <%= version[1] %> <%= version[2] %>
+    verifier:
+      name: shell
+      remote_exec: false
+      command: ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o LogLevel=ERROR -i ${KITCHEN_SSH_KEY} -p ${KITCHEN_PORT} ${KITCHEN_USERNAME}@${KITCHEN_HOSTNAME} <%= version[0]%> <%= root_path %>/srv/salt/test.py
 <% end %>
 
-verifier:
-  name: shell
-  remote_exec: false
-  command: ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o LogLevel=ERROR -i ${KITCHEN_SSH_KEY} -p ${KITCHEN_PORT} ${KITCHEN_USERNAME}@${KITCHEN_HOSTNAME} python2 <%= root_path %>/srv/salt/test.py

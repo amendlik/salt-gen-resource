@@ -6,10 +6,13 @@ import six
 import os.path as path
 import optparse
 import salt.version as version
-from unittest import TestCase, TextTestRunner, main
 from SaltGenResource import ResourceGenerator, SaltNodesCommandParser
-from mock import patch, Mock
+from unittest import TestCase, TextTestRunner, main
 
+if six.PY2:
+    from mock import patch, Mock
+else:
+    from unittest.mock import patch, Mock
 
 class TestMapping(TestCase):
 
