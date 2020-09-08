@@ -436,20 +436,26 @@ class ResourceGenerator:
         if isinstance(value, list):
             LOG.warning("Grain '%s' is a list. First item will be selected by default.", item)
 
-        return key, ResourceGenerator._get_grain_value(value)
+        return key, ResourceGenerator._get_grain_value(value, 0)
 
     @staticmethod
-    def _get_grain_value(value):
+    def _get_grain_value(value, depth):
         """
         Process different value types, recursing lists if necessary
         """
+
+        # Ignore dicts. Creating attributes from this type is not useful.
+        if isinstance(value, dict):
+            raise TypeError
+
+        # Return string value
         if isinstance(value, six.string_types):
             return stringutils.to_unicode(value)
 
         # Return the first element of a list
         if hasattr(value, "__iter__"):
             if isinstance(value, list) and len(value) > 0:
-                return ResourceGenerator._get_grain_value(value[0])
+                return ResourceGenerator._get_grain_value(value[0], depth + 1)
             raise TypeError
 
         return value
