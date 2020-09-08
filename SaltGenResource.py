@@ -476,7 +476,7 @@ class ResourceGenerator:
                     )
                 for tag in new_tags:
                     LOG.debug(
-                        "Adding tag for minion: '%s' grain: '%s', tag: '%s'",
+                        "Adding tag for minion: '%s', grain: '%s', tag: '%s'",
                         minion,
                         item,
                         tag,
@@ -484,7 +484,7 @@ class ResourceGenerator:
                     tags.add(tag)
             except TypeError:
                 LOG.warning(
-                    "Minion '%s' grain '%s' ignored because it contains nested items.",
+                    "Tag not added for minion: '%s', grain: '%s' because its data type is not supported.",
                     minion,
                     item,
                 )
