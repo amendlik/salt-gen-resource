@@ -444,9 +444,7 @@ class ResourceGenerator:
         Process different value types, recursing lists if necessary
         """
         if isinstance(value, six.string_types):
-            if six.PY2:
-                return value.encode("utf-8")
-            return value
+            return stringutils.to_unicode(value)
 
         # Return the first element of a list
         if hasattr(value, "__iter__"):
