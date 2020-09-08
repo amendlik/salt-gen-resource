@@ -2,7 +2,7 @@
 
 import sys
 import os.path as path
-import optparse
+import argparse
 from unittest import TestCase, TextTestRunner, main
 
 import six
@@ -271,7 +271,7 @@ class MockParser:
 
     def __init__(self):
         self.config = load_test_data("config.yaml")
-        self.options = optparse.Values(load_test_data("options.yaml"))
+        self.options = argparse.Namespace(**load_test_data("options.yaml"))
         self.args = ""
 
     # noinspection PyUnusedLocal

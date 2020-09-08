@@ -1,6 +1,5 @@
 __cli: SaltGenResource.py
 __role: minion
-cachedir: /home/amendlik/develop/salt-gen-resource-py2/var/cache/salt/minion
 grains:
   fqdn: minion1.example.com
   kernel: Linux
