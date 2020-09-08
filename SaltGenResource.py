@@ -401,7 +401,7 @@ class ResourceGenerator:
         for item in self.options.attributes:
             try:
                 key, value = self._attribute_from_grain(item, grains)
-                if value:
+                if value is not None:
                     LOG.debug(
                         "Adding attribute for minion: '%s' grain: '%s', attribute: '%s', value: '%s'",
                         minion,

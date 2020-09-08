@@ -13,6 +13,8 @@ linmin:
       - tuba
     - - violin
       - cello
+  virtual: false
+
 winmin:
   cpuarch: AMD64
   fqdn: minion2.example.com
@@ -28,3 +30,4 @@ winmin:
       - tuba
     - - violin
       - cello
+  virtual: false

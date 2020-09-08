@@ -15,5 +15,6 @@ grains:
       - tuba
     - - violin
       - cello
+  virtual: false
 selected_target_option: glob
 tgt: '*'
