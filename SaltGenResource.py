@@ -418,7 +418,7 @@ class ResourceGenerator:
                     )
             except TypeError:
                 LOG.warning(
-                    "Minion '%s' grain '%s' ignored because grain type is unsupported. ",
+                    "Minion '%s' grain '%s' ignored because grain type is unsupported.",
                     minion,
                     item,
                 )
