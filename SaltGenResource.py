@@ -12,7 +12,6 @@ added as a node attribute or tag.
 import logging
 import os
 import sys
-import six
 import yaml
 
 import salt.client
