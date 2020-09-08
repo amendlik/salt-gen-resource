@@ -489,28 +489,52 @@ class ResourceGenerator:
         """
         Define a single tag from a grain value
         """
-        tags = set()
         value = datautils.traverse_dict_and_list(
             grains, item, default=None, delimiter=self.options.delimiter
         )
+
+        return self._tags_from_value(value, 0)
+
+    @staticmethod
+    def _tags_from_value(value, depth):
+        """Add tags from a grain value
+
+        Args:
+            value (any): The grain value from which to create tag(s)
+            depth (int): The recursion depth. This is not currently used,
+                         but may be in the future to support a maximum
+                         recursion depth setting.
+
+        Returns:
+            set: Set of tags to create from this value
+
+        Raises:
+            TypeError: Raised when the type of the value is not supported
+        """
+        tags = set()
+
+        # Ignore None values
         if value is None:
-            pass
-        elif not value:
-            pass
-        elif isinstance(value, six.string_types):
+            return tags
+
+        # Ignore numbers, booleans, and dicts. Creating tags
+        # from these types is not useful.
+        if isinstance(value, (int, float, bool, dict)):
+            raise TypeError
+
+        # Create tags from string types
+        if isinstance(value, six.string_types):
             tags.add(stringutils.to_unicode(value))
+
+        # Create tags from binary types
         elif isinstance(value, six.binary_type):
             tags.add(value)
-        elif isinstance(value, dict):
-            raise TypeError
+
+        # If the type is iterable, add each element
         elif hasattr(value, "__iter__"):
-            for nesteditem in value:
-                if hasattr(nesteditem, "__iter__"):
-                    pass
-                else:
-                    tags.add(stringutils.to_unicode(nesteditem))
-        else:
-            tags.add(value)
+            for item in value:
+                tags.update(ResourceGenerator._tags_from_value(item, depth + 1))
+
         return tags
 
     @classmethod
