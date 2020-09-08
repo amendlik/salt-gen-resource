@@ -307,5 +307,4 @@ def load_test_data(dataset):
 
 
 if __name__ == "__main__":
-    runner = TextTestRunner(stream=sys.stdout, verbosity=2)
-    main(testRunner=runner, buffer=True)
+    main(testRunner=TextTestRunner(stream=sys.stdout, verbosity=2), buffer=True)
