@@ -434,7 +434,7 @@ class ResourceGenerator:
         )
 
         if isinstance(value, list):
-            LOG.warning("Grain '%s' is a list. First item selected by default.", item)
+            LOG.warning("Grain '%s' is a list. First item will be selected by default.", item)
 
         return key, ResourceGenerator._get_grain_value(value)
 
@@ -448,6 +448,7 @@ class ResourceGenerator:
                 return value.encode("utf-8")
             return value
 
+        # Return the first element of a list
         if hasattr(value, "__iter__"):
             if isinstance(value, list) and len(value) > 0:
                 return ResourceGenerator._get_grain_value(value[0])
