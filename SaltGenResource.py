@@ -157,9 +157,7 @@ class SaltNodesCommandParser(
             else:
                 self.config["tgt"] = self.args[0]
         except IndexError:
-            self.exit(
-                42, ("\nCannot execute command without " "defining a target.\n\n")
-            )
+            self.exit(42, "\nCannot execute command without defining a target.\n\n")
 
         if self.options.log_level:
             self.config["log_level"] = self.options.log_level
@@ -402,7 +400,10 @@ class ResourceGenerator:
                 key, value = self._attribute_from_grain(item, grains)
                 if value is not None:
                     LOG.debug(
-                        "Adding attribute for minion: '%s' grain: '%s', attribute: '%s', value: '%s'",
+                        (
+                            "Adding attribute for minion: "
+                            "'%s' grain: '%s', attribute: '%s', value: '%s'"
+                        ),
                         minion,
                         item,
                         key,
@@ -433,7 +434,9 @@ class ResourceGenerator:
         )
 
         if isinstance(value, list):
-            LOG.warning("Grain '%s' is a list. First item will be selected by default.", item)
+            LOG.warning(
+                "Grain '%s' is a list. First item will be selected by default.", item
+            )
 
         return key, ResourceGenerator._get_grain_value(value, 0)
 
@@ -483,7 +486,10 @@ class ResourceGenerator:
                     tags.add(tag)
             except TypeError:
                 LOG.warning(
-                    "Tag not added for minion: '%s', grain: '%s' because its data type is not supported.",
+                    (
+                        "Tag not added for minion: '%s', grain: '%s' "
+                        "because its data type is not supported."
+                    ),
                     minion,
                     item,
                 )
