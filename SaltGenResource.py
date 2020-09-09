@@ -399,6 +399,7 @@ class ResourceGenerator(object):
         tags = set()
         value = datautils.traverse_dict_and_list(
             grains, item, default=None, delimiter=self.options.delimiter)
+        value = value[0]
         if value is None:
             pass
         elif not value:
