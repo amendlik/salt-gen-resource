@@ -171,6 +171,22 @@ class TestNodeGenerator(TestCase):
                 self._test_tags(resources, parser.options.tags)
                 caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
 
+    def test_list_tag(self):
+        with patch("SaltGenResource.SaltNodesCommandParser", MockParser()) as parser:
+            with patch("salt.client.Caller", MockCaller()) as caller:
+                call_kwargs = dict.copy(self.default_kwargs)
+                parser.options.include_server_node = self.include_server_node
+                call_kwargs["exclude_minion"] = self.include_server_node
+
+                parser.options.tags = ["colors"]
+                resources = ResourceGenerator().as_dict()
+
+                self._test_required_attributes(resources)
+                caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
+
+                for _, attributes in six.iteritems(resources):
+                    self.assertTrue(len(attributes["tags"]) > 1)
+
     def test_static_attributes(self):
         with patch("SaltGenResource.SaltNodesCommandParser", MockParser()) as parser:
             with patch("salt.client.Caller", MockCaller()) as caller:
