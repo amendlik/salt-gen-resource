@@ -1,10 +1,10 @@
 <% root_path='/tmp/kitchen' %>
 <% @salt_versions = [
-  ['python2', 'stable', '2019.2.5'],
-  ['python3', 'stable', '2019.2.5'],
   ['python2', 'stable', '3000.3'],
   ['python3', 'stable', '3000.3'],
-  ['python3', 'stable', '3001.1']
+  ['python3', 'stable', '3001.4'],
+  ['python3', 'stable', '3002.5'],
+  ['python3', 'stable', '3003'],
 ] %>
 
 driver:
