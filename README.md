@@ -10,7 +10,7 @@ This script requires that a Salt Minion be running on the Rundeck server.
 
 ### Resource Model Provider Script
 
-The only file required from this repository is [SaltGenResource.py](SaltGenResource.py). Copy it to the Rundeck server, in the location where Rundeck configuration scripts are stored (e.g. `/opt/rundeck/scripts`). As an alternative, this entire repository can be cloned to make future updates easy.
+The only file required from this repository is [SaltGenResource.py](https://github.com/amendlik/salt-gen-resource/blob/master/SaltGenResource.py). Copy it to the Rundeck server, in the location where Rundeck configuration scripts are stored (e.g. `/opt/rundeck/scripts`). As an alternative, this entire repository can be cloned to make future updates easy.
 
 ### Sudo policy
 
