@@ -31,11 +31,11 @@ LOG = logging.getLogger("salt-gen-resource")
 # noinspection PyClassHasNoInit
 # pylint: disable=no-init
 class SaltNodesCommandParser(
-    salt.utils.parsers.OptionParserMeta,
     salt.utils.parsers.OptionParser,
     salt.utils.parsers.ConfigDirMixIn,
     salt.utils.parsers.ExtendedTargetOptionsMixIn,
     salt.utils.parsers.LogLevelMixIn,
+    metaclass=salt.utils.parsers.OptionParserMeta,
 ):
     """
     Argument parser used by SaltGenResource to generate
@@ -190,7 +190,7 @@ class SaltNodesCommandParser(
             # Prepend the root_dir setting to the log file path
             config.prepend_root_dir(config_opts, [self._logfile_config_setting_name_])
 
-            # Copy the altered path back to the options or it will revert to the default
+            # Copy the altered path back to the options, or it will revert to the default
             setattr(
                 self.options,
                 self._logfile_config_setting_name_,
@@ -205,6 +205,32 @@ class SaltNodesCommandParser(
                     self._logfile_config_setting_name_,
                     self._default_logging_logfile_,
                 )
+
+
+        if getattr(self.options, self._logfile_loglevel_config_setting_name_, "None") is None:
+
+            # Copy the default log file path into the config dict
+            if self._logfile_loglevel_config_setting_name_ not in config_opts:
+                config_opts[
+                    self._logfile_loglevel_config_setting_name_
+                ] = self._default_logging_level_
+
+            # Copy the altered path back to the options, or it will revert to the default
+            setattr(
+                self.options,
+                self._logfile_loglevel_config_setting_name_,
+                config_opts[self._logfile_loglevel_config_setting_name_],
+            )
+
+        else:
+            # Copy the provided log file path into the config dict
+            if self._logfile_loglevel_config_setting_name_ not in config_opts:
+                config_opts[self._logfile_loglevel_config_setting_name_] = getattr(
+                    self.options,
+                    self._logfile_loglevel_config_setting_name_,
+                    self._default_logging_level_,
+                )
+
 
         return config_opts
 
@@ -251,9 +277,6 @@ class ResourceGenerator:
 
         # Parse the static attribute definitions
         self.static = saltargs.parse_input(parser.args, False)[1]
-
-        # Setup file logging
-        parser.setup_logfile_logger()
 
         # Create local references to the parser data
         self.config = parser.config
