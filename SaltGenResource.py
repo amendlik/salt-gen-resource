@@ -19,18 +19,11 @@ import salt.utils
 import salt.grains
 import salt.version as version
 import salt.utils.parsers
-import salt.ext.six as six
 import salt.syspaths as syspaths
 import salt.config as config
 import salt.utils.args as saltargs
-
-# Adjust module import depending on Salt version
-if version.__saltstack_version__ >= version.SaltStackVersion.from_name("Oxygen"):
-    import salt.utils.data as datautils
-    import salt.utils.stringutils as stringutils
-else:
-    import salt.utils as datautils  # pylint: disable=reimported
-    import salt.utils as stringutils  # pylint: disable=reimported
+import salt.utils.data as datautils
+import salt.utils.stringutils as stringutils
 
 LOG = logging.getLogger("salt-gen-resource")
 
@@ -38,13 +31,11 @@ LOG = logging.getLogger("salt-gen-resource")
 # noinspection PyClassHasNoInit
 # pylint: disable=no-init
 class SaltNodesCommandParser(
-    six.with_metaclass(
-        salt.utils.parsers.OptionParserMeta,
-        salt.utils.parsers.OptionParser,
-        salt.utils.parsers.ConfigDirMixIn,
-        salt.utils.parsers.ExtendedTargetOptionsMixIn,
-        salt.utils.parsers.LogLevelMixIn,
-    )
+    salt.utils.parsers.OptionParser,
+    salt.utils.parsers.ConfigDirMixIn,
+    salt.utils.parsers.ExtendedTargetOptionsMixIn,
+    salt.utils.parsers.LogLevelMixIn,
+    metaclass=salt.utils.parsers.OptionParserMeta,
 ):
     """
     Argument parser used by SaltGenResource to generate
@@ -199,7 +190,7 @@ class SaltNodesCommandParser(
             # Prepend the root_dir setting to the log file path
             config.prepend_root_dir(config_opts, [self._logfile_config_setting_name_])
 
-            # Copy the altered path back to the options or it will revert to the default
+            # Copy the altered path back to the options, or it will revert to the default
             setattr(
                 self.options,
                 self._logfile_config_setting_name_,
@@ -214,6 +205,32 @@ class SaltNodesCommandParser(
                     self._logfile_config_setting_name_,
                     self._default_logging_logfile_,
                 )
+
+
+        if getattr(self.options, self._logfile_loglevel_config_setting_name_, "None") is None:
+
+            # Copy the default log file path into the config dict
+            if self._logfile_loglevel_config_setting_name_ not in config_opts:
+                config_opts[
+                    self._logfile_loglevel_config_setting_name_
+                ] = self._default_logging_level_
+
+            # Copy the altered path back to the options, or it will revert to the default
+            setattr(
+                self.options,
+                self._logfile_loglevel_config_setting_name_,
+                config_opts[self._logfile_loglevel_config_setting_name_],
+            )
+
+        else:
+            # Copy the provided log file path into the config dict
+            if self._logfile_loglevel_config_setting_name_ not in config_opts:
+                config_opts[self._logfile_loglevel_config_setting_name_] = getattr(
+                    self.options,
+                    self._logfile_loglevel_config_setting_name_,
+                    self._default_logging_level_,
+                )
+
 
         return config_opts
 
@@ -260,9 +277,6 @@ class ResourceGenerator:
 
         # Parse the static attribute definitions
         self.static = saltargs.parse_input(parser.args, False)[1]
-
-        # Setup file logging
-        parser.setup_logfile_logger()
 
         # Create local references to the parser data
         self.config = parser.config
@@ -348,7 +362,7 @@ class ResourceGenerator:
             self.resources[self._server_node_name].update(
                 {
                     k: v
-                    for k, v in six.iteritems(self.static)
+                    for k, v in self.static.items()
                     if k
                     not in SaltNodesCommandParser.ignore_attributes
                     + SaltNodesCommandParser.ignore_servernode
@@ -361,7 +375,7 @@ class ResourceGenerator:
                 self.resources[self._server_node_name]["tags"] = tags
 
         # Map grains into a Rundeck resource dict
-        for minion, minion_grains in six.iteritems(mine):
+        for minion, minion_grains in mine.items():
             # Map required node attributes from grains
             self.resources[minion] = {
                 "hostname": minion_grains["fqdn"],
@@ -378,7 +392,7 @@ class ResourceGenerator:
             self.resources[minion].update(
                 {
                     k: v
-                    for k, v in six.iteritems(self.static)
+                    for k, v in self.static.items()
                     if k not in SaltNodesCommandParser.ignore_attributes
                 }
             )
@@ -451,7 +465,7 @@ class ResourceGenerator:
             raise TypeError
 
         # Return string value
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             return stringutils.to_unicode(value)
 
         # Return the first element of a list
@@ -533,11 +547,11 @@ class ResourceGenerator:
             raise TypeError
 
         # Create tags from string types
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             tags.add(stringutils.to_unicode(value))
 
         # Create tags from binary types
-        elif isinstance(value, six.binary_type):
+        elif isinstance(value, bytes):
             tags.add(value)
 
         # If the type is iterable, add each element

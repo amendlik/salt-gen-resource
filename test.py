@@ -5,15 +5,12 @@ import os.path as path
 import argparse
 from unittest import TestCase, TextTestRunner, main
 
-import six
 import yaml
 import salt.version as version
 from SaltGenResource import ResourceGenerator, SaltNodesCommandParser
 
-if six.PY2:
-    from mock import patch, Mock
-else:
-    from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock
+
 
 # pylint: disable=protected-access,missing-function-docstring
 class TestMapping(TestCase):
@@ -104,7 +101,7 @@ class TestNodeGenerator(TestCase):
                 self._test_attributes(resources, parser.options.attributes)
                 caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
 
-                for _, resource in six.iteritems(resources):
+                for _, resource in resources.items():
                     self.assertEqual(resource["colors"], "red")
 
     def test_nested_list_attribute(self):
@@ -122,7 +119,7 @@ class TestNodeGenerator(TestCase):
                 self._test_attributes(resources, parser.options.attributes)
                 caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
 
-                for _, resource in six.iteritems(resources):
+                for _, resource in resources.items():
                     self.assertEqual(resource["instruments"], "oboe")
 
     def test_falsy_attribute(self):
@@ -140,7 +137,7 @@ class TestNodeGenerator(TestCase):
                 self._test_attributes(resources, parser.options.attributes)
                 caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
 
-                for _, resource in six.iteritems(resources):
+                for _, resource in resources.items():
                     self.assertIs(resource["virtual"], False)
 
     def test_single_tag(self):
@@ -184,7 +181,7 @@ class TestNodeGenerator(TestCase):
                 self._test_required_attributes(resources)
                 caller.cmd.assert_called_once_with(*self.default_args, **call_kwargs)
 
-                for _, attributes in six.iteritems(resources):
+                for _, attributes in resources.items():
                     self.assertTrue(len(attributes["tags"]) > 1)
 
     def test_static_attributes(self):
@@ -200,7 +197,7 @@ class TestNodeGenerator(TestCase):
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, ["color", "pattern"])
 
-                for host, _ in six.iteritems(resources):
+                for host, _ in resources.items():
                     self.assertEqual(resources[host]["color"], "yellow")
                     self.assertEqual(resources[host]["pattern"], "polka dot")
 
@@ -219,7 +216,7 @@ class TestNodeGenerator(TestCase):
                 self._test_required_attributes(resources)
                 self._test_attributes(resources, ["username"])
 
-                for host, _ in six.iteritems(resources):
+                for host, _ in resources.items():
                     if host == ResourceGenerator._server_node_name:
                         self.assertEqual(
                             resources[host]["username"], parser.options.server_node_user
@@ -236,13 +233,13 @@ class TestNodeGenerator(TestCase):
                 parser.options.include_server_node = self.include_server_node
                 call_kwargs["exclude_minion"] = self.include_server_node
 
-                parser.args = [u"color=⋐⊮⊰⟒"]
+                parser.args = ["color=⋐⊮⊰⟒"]
                 output = ResourceGenerator().as_yaml()
                 self.assertNotIn("!!python/unicode", output)
 
     def _test_required_attributes(self, resources):
         self.assertTrue(len(resources) > 0)
-        for host, attributes in six.iteritems(resources):
+        for host, attributes in resources.items():
             for attribute in self.required_attributes:
                 self.assertIn(attribute, attributes)
                 self.assertIsNotNone(attributes[attribute])
@@ -271,7 +268,7 @@ class TestNodeGenerator(TestCase):
     def _test_attributes(self, resources, needed):
         self.assertTrue(len(resources) > 0)
         self.assertNotIn("!!", ResourceGenerator._dump_yaml(resources))
-        for _, attributes in six.iteritems(resources):
+        for _, attributes in resources.items():
             for attribute in needed:
                 self.assertIn(attribute, attributes)
                 self.assertIsNotNone(attributes[attribute])
@@ -280,7 +277,7 @@ class TestNodeGenerator(TestCase):
     def _test_tags(self, resources, needed):
         self.assertTrue(len(resources) > 0)
         self.assertNotIn("!!", ResourceGenerator._dump_yaml(resources))
-        for _, attributes in six.iteritems(resources):
+        for _, attributes in resources.items():
             self.assertIn("tags", attributes)
             self.assertIsNotNone(attributes["tags"])
             self.assertEqual(len(attributes["tags"]), len(needed))
