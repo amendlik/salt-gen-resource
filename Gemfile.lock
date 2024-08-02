@@ -51,7 +51,8 @@ GEM
     nori (2.6.0)
     pastel (0.8.0)
       tty-color (~> 0.5)
-    rexml (3.2.5)
+    rexml (3.3.3)
+      strscan
     rubyntlm (0.6.3)
     rubyzip (2.3.2)
     strings (0.2.1)
@@ -59,6 +60,7 @@ GEM
       unicode-display_width (>= 1.5, < 3.0)
       unicode_utils (~> 1.4)
     strings-ansi (0.2.0)
+    strscan (3.1.0)
     test-kitchen (3.4.0)
       bcrypt_pbkdf (~> 1.0)
       chef-utils (>= 16.4.35)
